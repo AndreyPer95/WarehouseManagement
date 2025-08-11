@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagement.Models.Resources;
 using WarehouseManagement.Models.Units;
 using WarehouseManagement.Models.Receipts;
 using WarehouseManagement.Models.Warehouse;
+using Microsoft.EntityFrameworkCore;
 
 namespace WarehouseManagement.Data
 {
@@ -23,7 +23,7 @@ namespace WarehouseManagement.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Конфигурация Resource
+ 
             modelBuilder.Entity<Resource>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -31,7 +31,6 @@ namespace WarehouseManagement.Data
                 entity.HasIndex(e => e.Name).IsUnique();
             });
 
-            // Конфигурация Unit
             modelBuilder.Entity<Unit>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -39,7 +38,6 @@ namespace WarehouseManagement.Data
                 entity.HasIndex(e => e.Name).IsUnique();
             });
 
-            // Конфигурация Receipt
             modelBuilder.Entity<Receipt>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -48,7 +46,6 @@ namespace WarehouseManagement.Data
                 entity.HasIndex(e => e.Number).IsUnique();
             });
 
-            // Конфигурация ReceiptResource
             modelBuilder.Entity<ReceiptResource>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -70,7 +67,6 @@ namespace WarehouseManagement.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Конфигурация WarehouseBalance
             modelBuilder.Entity<WarehouseBalance>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -86,7 +82,6 @@ namespace WarehouseManagement.Data
                     .HasForeignKey(e => e.UnitId)
                     .OnDelete(DeleteBehavior.Restrict);
                     
-                // Уникальный индекс для комбинации Resource и Unit
                 entity.HasIndex(e => new { e.ResourceId, e.UnitId }).IsUnique();
             });
         }

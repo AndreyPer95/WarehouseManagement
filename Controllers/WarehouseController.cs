@@ -49,6 +49,5 @@ namespace WarehouseManagement.Controllers
         {
             return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-        }
     }
 }

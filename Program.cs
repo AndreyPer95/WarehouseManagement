@@ -1,15 +1,56 @@
+using Microsoft.EntityFrameworkCore;
+using WarehouseManagement.Data;
+using WarehouseManagement.Services.Interfaces;
+using WarehouseManagement.Services.Implementations;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
+
+var databaseProvider = builder.Configuration["DatabaseProvider"];
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<WarehouseContext>(options =>
+{
+    if (databaseProvider == "PostgreSQL")
+    {
+        options.UseNpgsql(connectionString);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
+
+builder.Services.AddScoped<IResourceService, ResourceService>();
+builder.Services.AddScoped<IUnitService, UnitService>();
+builder.Services.AddScoped<IReceiptService, ReceiptService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<WarehouseContext>();
+        
+        context.Database.Migrate();
+        
+        DbInitializer.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ошибка при создании/миграции БД.");
+    }
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Warehouse/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WarehouseManagement.Models.Receipts;
 
 namespace WarehouseManagement.Models.Resources
 {
@@ -11,8 +12,7 @@ namespace WarehouseManagement.Models.Resources
         public string Name { get; set; } = string.Empty;
         
         public ResourceStatus Status { get; set; } = ResourceStatus.Active;
-        
-        // Навигационные свойства
+
         public virtual ICollection<ReceiptResource> ReceiptResources { get; set; } = new List<ReceiptResource>();
     }
     

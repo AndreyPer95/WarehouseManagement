@@ -13,7 +13,7 @@ namespace WarehouseManagement.Data
             {
                 return;
             }
-
+            
             var units = new Unit[]
             {
                 new Unit { Name = "шт", Status = UnitStatus.Active },
@@ -25,10 +25,9 @@ namespace WarehouseManagement.Data
                 new Unit { Name = "м²", Status = UnitStatus.Active },
                 new Unit { Name = "м³", Status = UnitStatus.Active }
             };
-
             context.Units.AddRange(units);
             context.SaveChanges();
-
+            
             var resources = new Resource[]
             {
                 new Resource { Name = "Гвозди 100мм", Status = ResourceStatus.Active },
@@ -42,10 +41,9 @@ namespace WarehouseManagement.Data
                 new Resource { Name = "Плитка керамическая", Status = ResourceStatus.Active },
                 new Resource { Name = "Провод ВВГ 3x2.5", Status = ResourceStatus.Active }
             };
-
             context.Resources.AddRange(resources);
             context.SaveChanges();
-
+            
             var receipts = new Receipt[]
             {
                 new Receipt 
@@ -64,38 +62,37 @@ namespace WarehouseManagement.Data
                     Date = DateTime.Now.AddDays(-10)
                 }
             };
-
             context.Receipts.AddRange(receipts);
             context.SaveChanges();
- 
+            
             var receiptResources = new ReceiptResource[]
             {
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[0].Id,
-                    ResourceId = resources[0].Id, 
-                    UnitId = units[1].Id, 
+                    ResourceId = resources[0].Id,
+                    UnitId = units[1].Id,
                     Quantity = 50
                 },
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[0].Id,
-                    ResourceId = resources[1].Id, 
-                    UnitId = units[7].Id, 
+                    ResourceId = resources[1].Id,
+                    UnitId = units[7].Id,
                     Quantity = 10
                 },
                 
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[1].Id,
-                    ResourceId = resources[2].Id, 
-                    UnitId = units[1].Id, 
+                    ResourceId = resources[2].Id,
+                    UnitId = units[1].Id,
                     Quantity = 1000
                 },
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[1].Id,
-                    ResourceId = resources[3].Id, 
+                    ResourceId = resources[3].Id,
                     UnitId = units[5].Id,
                     Quantity = 5
                 },
@@ -103,29 +100,28 @@ namespace WarehouseManagement.Data
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[2].Id,
-                    ResourceId = resources[4].Id, 
-                    UnitId = units[0].Id, 
+                    ResourceId = resources[4].Id,
+                    UnitId = units[0].Id,
                     Quantity = 5000
                 },
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[2].Id,
-                    ResourceId = resources[5].Id, 
-                    UnitId = units[3].Id, 
+                    ResourceId = resources[5].Id,
+                    UnitId = units[3].Id,
                     Quantity = 200
                 },
                 new ReceiptResource 
                 { 
                     ReceiptId = receipts[2].Id,
-                    ResourceId = resources[8].Id, 
-                    UnitId = units[6].Id, 
+                    ResourceId = resources[8].Id,
+                    UnitId = units[6].Id,
                     Quantity = 100
                 }
             };
-
             context.ReceiptResources.AddRange(receiptResources);
             context.SaveChanges();
-
+            
             UpdateWarehouseBalance(context);
         }
 

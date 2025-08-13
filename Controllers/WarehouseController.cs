@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagement.Services.Interfaces;
-using WarehouseManagement.ViewModels.Warehouse;
-using WarehouseManagement.Models;
 
 namespace WarehouseManagement.Controllers
 {
-    public class WarehouseController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class WarehouseController : ControllerBase
     {
         private readonly IWarehouseService _warehouseService;
         private readonly ILogger<WarehouseController> _logger;
@@ -18,36 +18,56 @@ namespace WarehouseManagement.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        // GET: api/warehouse/balance
+        [HttpGet("balance")]
+        public async Task<IActionResult> GetBalance()
         {
             try
             {
                 var balances = await _warehouseService.GetBalanceAsync();
-                
-                var viewModels = balances.Select(b => new WarehouseBalanceViewModel
-                {
-                    Id = b.Id,
-                    ResourceName = b.Resource?.Name ?? "Неизвестный ресурс",
-                    UnitName = b.Unit?.Name ?? "Неизвестная ед. изм.",
-                    Quantity = b.Quantity,
-                    ResourceId = b.ResourceId,
-                    UnitId = b.UnitId
-                }).ToList();
-
-                return View(viewModels);
+                return Ok(balances);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при получении баланса склада");
-                TempData["Error"] = "Произошла ошибка при загрузке данных склада";
-                return View(new List<WarehouseBalanceViewModel>());
+                return StatusCode(500, new { error = "Произошла ошибка при загрузке данных склада" });
             }
         }
-        
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+
+        // GET: api/warehouse/balance/5/3
+        [HttpGet("balance/{resourceId}/{unitId}")]
+        public async Task<IActionResult> GetBalanceByResourceAndUnit(int resourceId, int unitId)
         {
-            return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            try
+            {
+                var balance = await _warehouseService.GetBalanceByResourceAndUnitAsync(resourceId, unitId);
+                if (balance == null)
+                {
+                    return NotFound(new { error = "Баланс не найден" });
+                }
+                return Ok(balance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при получении баланса");
+                return StatusCode(500, new { error = "Произошла ошибка при загрузке баланса" });
+            }
+        }
+
+        // GET: api/warehouse/check/5/3/100
+        [HttpGet("check/{resourceId}/{unitId}/{quantity}")]
+        public async Task<IActionResult> CheckAvailability(int resourceId, int unitId, decimal quantity)
+        {
+            try
+            {
+                var available = await _warehouseService.CheckAvailabilityAsync(resourceId, unitId, quantity);
+                return Ok(new { available });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при проверке доступности");
+                return StatusCode(500, new { error = "Произошла ошибка при проверке доступности" });
+            }
         }
     }
 }

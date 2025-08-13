@@ -13,7 +13,6 @@ namespace WarehouseManagement.Models.Resources
         
         public ResourceStatus Status { get; set; } = ResourceStatus.Active;
 
-        public virtual ICollection<ReceiptResource> ReceiptResources { get; set; } = new List<ReceiptResource>();
     }
     
     public enum ResourceStatus

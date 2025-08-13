@@ -12,7 +12,5 @@ namespace WarehouseManagement.Models.Receipts
         
         [Required(ErrorMessage = "Дата документа обязательна")]
         public DateTime Date { get; set; } = DateTime.Now;
-
-        public virtual ICollection<ReceiptResource> ReceiptResources { get; set; } = new List<ReceiptResource>();
     }
 }

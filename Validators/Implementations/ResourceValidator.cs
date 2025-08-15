@@ -1,0 +1,72 @@
+﻿using Microsoft.EntityFrameworkCore;
+using WarehouseManagement.Data;
+using WarehouseManagement.Models.Common;
+using WarehouseManagement.Models.Resources;
+using WarehouseManagementAPI.Validators.Interfaces;
+
+namespace WarehouseManagementAPI.Validators.Implementations
+{
+    public class ResourceValidator : IResourceValidator
+    {
+        private readonly WarehouseContext _context;
+
+        public ResourceValidator(WarehouseContext context) => _context = context;
+
+        public async Task<ServiceResult> ValidateForCreateAsync(Resource resource)
+        {
+            var errors = new List<string>();
+
+            if (await NameExistsAsync(resource.Name))
+                errors.Add($"Ресурс с именем '{resource.Name}' уже существует");
+
+            return errors.Any() ? ServiceResult.Failure(errors) : ServiceResult.Success();
+        }
+
+        public async Task<ServiceResult> ValidateForUpdateAsync(Resource resource)
+        {
+            var errors = new List<string>();
+
+            var exists = await _context.Resources.FindAsync(resource.Id);
+            if (exists is null)
+            {
+                errors.Add($"Ресурс с ID {resource.Id} не найден");
+                return ServiceResult.Failure(errors);
+            }
+
+            if (await NameExistsAsync(resource.Name, excludeId: resource.Id))
+                errors.Add($"Ресурс с именем '{resource.Name}' уже существует");
+
+            return errors.Any() ? ServiceResult.Failure(errors) : ServiceResult.Success();
+        }
+
+        public async Task<ServiceResult> ValidateForDeleteAsync(int resourceId)
+        {
+            var errors = new List<string>();
+
+            var resource = await _context.Resources.FindAsync(resourceId);
+            if (resource is null)
+            {
+                errors.Add($"Ресурс с ID {resourceId} не найден");
+                return ServiceResult.Failure(errors);
+            }
+
+            // Нельзя удалить, если где-то используется (в поступлениях/отгрузках и т.п.)
+            var usedInReceipts = await _context.ReceiptResources.AnyAsync(r => r.ResourceId == resourceId);
+            if (usedInReceipts)
+                errors.Add("Ресурс используется и не может быть удалён. Переведите его в архив.");
+
+            return errors.Any() ? ServiceResult.Failure(errors) : ServiceResult.Success();
+        }
+
+        private Task<bool> NameExistsAsync(string name, int? excludeId = null)
+        {
+            var normalized = Normalize(name);
+            var query = _context.Resources.Where(r => Normalize(r.Name) == normalized);
+            if (excludeId.HasValue)
+                query = query.Where(r => r.Id != excludeId.Value);
+            return query.AnyAsync();
+        }
+
+        private static string Normalize(string s) => (s ?? string.Empty).Trim().ToUpperInvariant();
+    }
+}

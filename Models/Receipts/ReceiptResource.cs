@@ -6,6 +6,7 @@ namespace WarehouseManagement.Models.Receipts
 {
     public class ReceiptResource
     {
+        [Key]
         public int Id { get; set; }
         
         [Required]

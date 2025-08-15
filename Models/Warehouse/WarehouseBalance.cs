@@ -13,7 +13,6 @@ namespace WarehouseManagement.Models.Warehouse
         
         public decimal Quantity { get; set; }
         
-        // Навигационные свойства
         public virtual Resource Resource { get; set; } = null!;
         public virtual Unit Unit { get; set; } = null!;
     }

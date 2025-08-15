@@ -5,6 +5,7 @@ namespace WarehouseManagement.Models.Resources
 {
     public class Resource
     {
+        [Key]
         public int Id { get; set; }
         
         [Required(ErrorMessage = "Наименование обязательно")]
@@ -12,7 +13,6 @@ namespace WarehouseManagement.Models.Resources
         public string Name { get; set; } = string.Empty;
         
         public ResourceStatus Status { get; set; } = ResourceStatus.Active;
-
     }
     
     public enum ResourceStatus

@@ -4,6 +4,7 @@ namespace WarehouseManagement.Models.Receipts
 {
     public class Receipt
     {
+        [Key]
         public int Id { get; set; }
         
         [Required(ErrorMessage = "Номер документа обязателен")]

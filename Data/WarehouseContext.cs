@@ -51,18 +51,21 @@ namespace WarehouseManagement.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Quantity).HasPrecision(18, 3);
                 
+                // Односторонняя связь от ReceiptResource к Receipt
                 entity.HasOne(e => e.Receipt)
-                    .WithMany(r => r.ReceiptResources)
+                    .WithMany() // Receipt не имеет навигационного свойства
                     .HasForeignKey(e => e.ReceiptId)
                     .OnDelete(DeleteBehavior.Cascade);
                     
+                // Односторонняя связь от ReceiptResource к Resource
                 entity.HasOne(e => e.Resource)
-                    .WithMany(r => r.ReceiptResources)
+                    .WithMany() // Resource не имеет навигационного свойства
                     .HasForeignKey(e => e.ResourceId)
                     .OnDelete(DeleteBehavior.Restrict);
                     
+                // Односторонняя связь от ReceiptResource к Unit
                 entity.HasOne(e => e.Unit)
-                    .WithMany(u => u.ReceiptResources)
+                    .WithMany() // Unit не имеет навигационного свойства
                     .HasForeignKey(e => e.UnitId)
                     .OnDelete(DeleteBehavior.Restrict);
             });

@@ -1,0 +1,270 @@
+/* Основные стили */
+:root {
+    --sidebar-bg: #1a2847;
+    --sidebar-text: #ffffff;
+    --sidebar-hover: #2a3857;
+    --main-bg: #f5f5f5;
+    --content-bg: #ffffff;
+    --table-header: #e8e8e8;
+    --table-row: #f8f8f8;
+    --btn-blue: #007bff;
+    --btn-green: #28a745;
+    --btn-yellow: #ffc107;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--main-bg);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Боковая панель */
+.sidebar {
+    width: 250px;
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+.sidebar-header {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.sidebar-section {
+    margin-bottom: 30px;
+}
+
+.sidebar-section h3 {
+    padding: 0 20px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.sidebar-nav {
+    list-style: none;
+}
+
+.sidebar-nav li {
+    margin-bottom: 2px;
+}
+
+.sidebar-nav a {
+    display: block;
+    padding: 10px 20px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background-color: var(--sidebar-hover);
+}
+
+/* Основной контент */
+.main-content {
+    margin-left: 250px;
+    flex: 1;
+    padding: 20px;
+}
+
+.content-wrapper {
+    background-color: var(--content-bg);
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.page-header {
+    margin-bottom: 20px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Фильтры */
+.filters {
+    background-color: var(--content-bg);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 14px;
+    color: #666;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Кнопки */
+.btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background-color: var(--btn-blue);
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--btn-green);
+    color: white;
+}
+
+.btn-warning {
+    background-color: var(--btn-yellow);
+    color: #333;
+}
+/* Таблицы */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.data-table thead {
+    background-color: var(--table-header);
+}
+
+.data-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid #eee;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: var(--table-row);
+}
+
+.data-table tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+.data-table td {
+    padding: 12px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* Действия в таблице */
+.table-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.table-actions .btn {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* Формы */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--btn-blue);
+}
+
+/* Статусы */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-archived {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-signed {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-unsigned {
+    background-color: #fff3cd;
+    color: #856404;
+}

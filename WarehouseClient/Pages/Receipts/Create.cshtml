@@ -1,0 +1,58 @@
+@page
+@model WarehouseClient.Pages.Receipts.CreateModel
+@{
+    ViewData["Title"] = "Создать поступление";
+}
+
+<div class="content-wrapper">
+    <div class="page-header">
+        <h1>Создать поступление</h1>
+    </div>
+
+    <form method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        
+        <div class="form-group">
+            <label asp-for="Receipt.Number"></label>
+            <input asp-for="Receipt.Number" class="form-control" />
+            <span asp-validation-for="Receipt.Number" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Receipt.Date"></label>
+            <input asp-for="Receipt.Date" type="date" class="form-control" />
+            <span asp-validation-for="Receipt.Date" class="text-danger"></span>
+        </div>
+
+        <h3>Ресурсы</h3>
+        <div id="resources-container">
+            <div class="resource-item">
+                <div class="form-group">
+                    <label>Ресурс</label>
+                    <select name="ResourceIds" class="form-control" asp-items="Model.ResourcesList">
+                        <option value="">Выберите ресурс</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Единица измерения</label>
+                    <select name="UnitIds" class="form-control" asp-items="Model.UnitsList">
+                        <option value="">Выберите единицу</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Количество</label>
+                    <input type="number" step="0.01" name="Quantities" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-success">Создать</button>
+            <a href="/Receipts" class="btn">Отмена</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

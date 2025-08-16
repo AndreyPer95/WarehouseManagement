@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagement.Models.Resources;
 using WarehouseManagementAPI.Dto.Common;
+using WarehouseManagementAPI.Services.Interfaces;
 
 namespace WarehouseManagementAPI.Controllers
 {
@@ -8,9 +9,9 @@ namespace WarehouseManagementAPI.Controllers
     [Route("api/resources")]
     public class ResourcesController : ControllerBase
     {
-        private readonly ResourceService _service;
+        private readonly IResourceService _service;
 
-        public ResourcesController(ResourceService service) => _service = service;
+        public ResourcesController(IResourceService service) => _service = service;
 
         [HttpGet]
         public async Task<ActionResult<List<Resource>>> GetAll()

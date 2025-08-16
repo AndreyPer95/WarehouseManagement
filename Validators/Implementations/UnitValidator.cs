@@ -66,6 +66,6 @@ namespace WarehouseManagementAPI.Validators.Implementations
             return query.AnyAsync();
         }
 
-        private static string Normalize(string s) => (s ?? string.Empty).Trim().ToUpperInvariant();
+        private static string Normalize(string s) => (s ?? string.Empty).Trim().ToUpperInvariant();//заменить
     }
 }

@@ -1,0 +1,49 @@
+@page
+@model WarehouseClient.Pages.IndexModel
+@{
+    ViewData["Title"] = "Баланс склада";
+}
+
+<div class="content-wrapper">
+    <div class="page-header">
+        <h1>Баланс</h1>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filter-group">
+            <label for="resourceFilter">Ресурс</label>
+            <select id="resourceFilter" name="resourceId" asp-items="Model.ResourcesList">
+                <option value="">Выберите</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="unitFilter">Единица измерения</label>
+            <select id="unitFilter" name="unitId" asp-items="Model.UnitsList">
+                <option value="">Выберите</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Применить</button>
+    </form>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Ресурс</th>
+                <th>Единица измерения</th>
+                <th>Количество</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Balances)
+            {
+                <tr>
+                    <td>@item.Resource?.Name</td>
+                    <td>@item.Unit?.Name</td>
+                    <td>@item.Quantity.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

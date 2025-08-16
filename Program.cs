@@ -55,6 +55,9 @@ builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 
 // Register Validators
 builder.Services.AddScoped<IReceiptValidator, ReceiptValidator>();
+builder.Services.AddScoped<IReceiptResourceValidator, ReceiptResourceValidator>();
+builder.Services.AddScoped<IResourceValidator, ResourceValidator>();
+builder.Services.AddScoped<IUnitValidator, UnitValidator>();
 
 var app = builder.Build();
 

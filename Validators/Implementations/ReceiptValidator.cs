@@ -157,12 +157,11 @@ namespace WarehouseManagementAPI.Validators.Implementations
 
         private async Task<bool> IsReceiptNumberUniqueAsync(string number, int? excludeId = null)
         {
-            var normalized = Normalize(number);
-            var query = _context.Receipts.Where(r => Normalize(r.Number) == normalized);
+            var normalized = (number ?? string.Empty).Trim().ToUpper();
+            var query = _context.Receipts.AsNoTracking()
+                                .Where(r => r.Number != null && r.Number.Trim().ToUpper() == normalized);
             if (excludeId.HasValue) query = query.Where(r => r.Id != excludeId.Value);
             return !await query.AnyAsync();
         }
-
-        private static string Normalize(string s) => (s ?? string.Empty).Trim().ToUpperInvariant();
     }
 }

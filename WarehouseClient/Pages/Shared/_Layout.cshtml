@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Управление складом</title>
+    <link rel="stylesheet" href="~/css/warehouse.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Управление складом</h2>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3>Склад</h3>
+            <ul class="sidebar-nav">
+                <li><a href="/" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")">Баланс</a></li>
+                <li><a href="/Receipts" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Receipts/Index" ? "active" : "")">Поступления</a></li>
+                <li><a href="/Shipments" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Shipments/Index" ? "active" : "")">Отгрузки</a></li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3>Справочники</h3>
+            <ul class="sidebar-nav">
+                <li><a href="/Clients" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Clients/Index" ? "active" : "")">Клиенты</a></li>
+                <li><a href="/Units" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Units/Index" ? "active" : "")">Единицы измерения</a></li>
+                <li><a href="/Resources" class="@(ViewContext.RouteData.Values["page"]?.ToString() == "/Resources/Index" ? "active" : "")">Ресурсы</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="main-content">
+        @RenderBody()
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

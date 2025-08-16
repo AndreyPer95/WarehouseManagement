@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagement.Models.Units;
+using WarehouseManagement.Services.Interfaces.WarehouseManagementAPI.Services.Interfaces;
 using WarehouseManagementAPI.Dto.Common;
 
 namespace WarehouseManagementAPI.Controllers
@@ -8,9 +9,9 @@ namespace WarehouseManagementAPI.Controllers
     [Route("api/units")]
     public class UnitsController : ControllerBase
     {
-        private readonly UnitService _service;
+        private readonly IUnitService _service;
 
-        public UnitsController(UnitService service) => _service = service;
+        public UnitsController(IUnitService service) => _service = service;
 
         [HttpGet]
         public async Task<ActionResult<List<Unit>>> GetAll()

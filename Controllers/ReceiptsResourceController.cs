@@ -3,6 +3,8 @@ using WarehouseManagement.Services.Interfaces;
 using WarehouseManagement.Models.Receipts;
 using WarehouseManagementAPI.Dto.Common;
 using WarehouseManagementAPI.Dto.Receipts;
+using WarehouseManagementAPI.Services.Interfaces;
+using WarehouseManagement.Services.Interfaces.WarehouseManagementAPI.Services.Interfaces;
 
 
 namespace WarehouseManagementAPI.Controllers
@@ -12,13 +14,13 @@ namespace WarehouseManagementAPI.Controllers
     public class ReceiptsResourceController : ControllerBase
     {
         private readonly IReceiptResourceService _service;
-        private readonly ResourceService _resources;
-        private readonly UnitService _units;
+        private readonly IResourceService _resources;
+        private readonly IUnitService _units;
 
         public ReceiptsResourceController(
             IReceiptResourceService service,
-            ResourceService resources,
-            UnitService units)
+            IResourceService resources,
+            IUnitService units)
         {
             _service = service;
             _resources = resources;

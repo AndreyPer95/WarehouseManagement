@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagement.Services.Interfaces;
+using WarehouseManagement.Services.Interfaces.WarehouseManagementAPI.Services.Interfaces;
 using WarehouseManagementAPI.Dto.Common;
 using WarehouseManagementAPI.Dto.Warehouse;
+using WarehouseManagementAPI.Services.Interfaces;
 
 namespace WarehouseManagementAPI.Controllers
 {
@@ -10,13 +12,13 @@ namespace WarehouseManagementAPI.Controllers
     public class WarehouseController : ControllerBase
     {
         private readonly IWarehouseService _warehouse;
-        private readonly ResourceService _resources;
-        private readonly UnitService _units;
+        private readonly IResourceService _resources;
+        private readonly IUnitService _units;
 
         public WarehouseController(
             IWarehouseService warehouse,
-            ResourceService resources,
-            UnitService units)
+            IResourceService resources,
+            IUnitService units)
         {
             _warehouse = warehouse;
             _resources = resources;

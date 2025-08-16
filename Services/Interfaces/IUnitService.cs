@@ -1,17 +1,22 @@
+using WarehouseManagement.Models.Common;
 using WarehouseManagement.Models.Units;
+using WarehouseManagementAPI.Dto.Common;
 
 namespace WarehouseManagement.Services.Interfaces
 {
-    public interface IUnitService
+    namespace WarehouseManagementAPI.Services.Interfaces
     {
-        Task<IEnumerable<Unit>> GetAllAsync();
-        Task<IEnumerable<Unit>> GetActiveAsync();
-        Task<Unit?> GetByIdAsync(int id);
-        Task<Unit> CreateAsync(Unit unit);
-        Task<Unit> UpdateAsync(Unit unit);
-        Task<bool> ArchiveAsync(int id);
-        Task<bool> CanDeleteAsync(int id);
-        Task<bool> DeleteAsync(int id);
-        Task<bool> IsNameUniqueAsync(string name, int? excludeId = null);
+        public interface IUnitService
+        {
+            Task<List<Unit>> GetAllAsync();
+            Task<Unit?> GetByIdAsync(int id);
+
+            Task<ServiceResult<Unit>> CreateAsync(Unit unit);
+            Task<ServiceResult<Unit>> UpdateAsync(Unit unit);
+            Task<ServiceResult> DeleteAsync(int id);
+
+            /// <summary>Опции для фильтров (id+name), не зависят от периода.</summary>
+            Task<List<OptionDto>> GetFilterOptionsAsync();
+        }
     }
 }

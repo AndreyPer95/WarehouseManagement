@@ -3,11 +3,20 @@ using WarehouseManagement.Data;
 using WarehouseManagement.Services.Interfaces;
 using WarehouseManagement.Services.Implementations;
 using WarehouseManagement.Extensions;
+using WarehouseManagementAPI.Validators.Interfaces;
+using WarehouseManagementAPI.Validators.Implementations;
+using WarehouseManagement.Services.Interfaces.WarehouseManagementAPI.Services.Interfaces;
+using WarehouseManagementAPI.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -41,8 +50,11 @@ builder.Services.AddDbContext<WarehouseContext>(options =>
 // Register Services
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
-builder.Services.AddScoped<IReceiptService, ReceiptService>();
+builder.Services.AddScoped<IReceiptResourceService, ReceiptResourceService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+
+// Register Validators
+builder.Services.AddScoped<IReceiptValidator, ReceiptValidator>();
 
 var app = builder.Build();
 
@@ -62,7 +74,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

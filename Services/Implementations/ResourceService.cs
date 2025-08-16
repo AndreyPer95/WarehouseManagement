@@ -1,83 +1,70 @@
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagement.Data;
+using WarehouseManagement.Models.Common;
 using WarehouseManagement.Models.Resources;
-using WarehouseManagement.Services.Interfaces;
+using WarehouseManagementAPI.Dto.Common;
+using WarehouseManagementAPI.Validators.Interfaces;
+using WarehouseManagementAPI.Services.Interfaces;
 
-namespace WarehouseManagement.Services.Implementations
+public class ResourceService : IResourceService
 {
-    public class ResourceService : IResourceService
+    private readonly WarehouseContext _context;
+    private readonly IResourceValidator _validator;
+
+    public ResourceService(WarehouseContext context, IResourceValidator validator)
     {
-        private readonly WarehouseContext _context;
-
-        public ResourceService(WarehouseContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<IEnumerable<Resource>> GetAllAsync()
-        {
-            return await _context.Resources.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Resource>> GetActiveAsync()
-        {
-            return await _context.Resources
-                .Where(r => r.Status == ResourceStatus.Active)
-                .ToListAsync();
-        }
-
-        public async Task<Resource?> GetByIdAsync(int id)
-        {
-            return await _context.Resources.FindAsync(id);
-        }
-        public async Task<Resource> CreateAsync(Resource resource)
-        {
-            _context.Resources.Add(resource);
-            await _context.SaveChangesAsync();
-            return resource;
-        }
-
-        public async Task<Resource> UpdateAsync(Resource resource)
-        {
-            _context.Entry(resource).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return resource;
-        }
-
-        public async Task<bool> ArchiveAsync(int id)
-        {
-            var resource = await GetByIdAsync(id);
-            if (resource == null) return false;
-
-            resource.Status = ResourceStatus.Archived;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> CanDeleteAsync(int id)
-        {
-            return !await _context.ReceiptResources
-                .AnyAsync(rr => rr.ResourceId == id);
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var resource = await GetByIdAsync(id);
-            if (resource == null) return false;
-
-            _context.Resources.Remove(resource);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null)
-        {
-            var query = _context.Resources.Where(r => r.Name == name);
-            if (excludeId.HasValue)
-            {
-                query = query.Where(r => r.Id != excludeId.Value);
-            }
-            return !await query.AnyAsync();
-        }
+        _context = context;
+        _validator = validator;
     }
+
+    public Task<List<Resource>> GetAllAsync()
+        => _context.Resources.OrderBy(r => r.Name).ToListAsync();
+
+    public Task<Resource?> GetByIdAsync(int id)
+        => _context.Resources.FindAsync(id).AsTask();
+
+    public async Task<ServiceResult<Resource>> CreateAsync(Resource resource)
+    {
+        var vr = await _validator.ValidateForCreateAsync(resource);
+        if (!vr.IsSuccess) return ServiceResult<Resource>.Failure(vr.ErrorMessage ?? "Ошибка валидации");
+
+        _context.Resources.Add(resource);
+        await _context.SaveChangesAsync();
+        return ServiceResult<Resource>.Success(resource);
+    }
+
+    public async Task<ServiceResult<Resource>> UpdateAsync(Resource resource)
+    {
+        var vr = await _validator.ValidateForUpdateAsync(resource);
+        if (!vr.IsSuccess) return ServiceResult<Resource>.Failure(vr.ErrorMessage ?? "Ошибка валидации");
+
+        var existing = await _context.Resources.FindAsync(resource.Id);
+        if (existing is null) return ServiceResult<Resource>.Failure("Ресурс не найден");
+
+        existing.Name = resource.Name;
+        existing.Status = resource.Status;
+        await _context.SaveChangesAsync();
+
+        return ServiceResult<Resource>.Success(existing);
+    }
+
+    public async Task<ServiceResult> DeleteAsync(int id)
+    {
+        var vr = await _validator.ValidateForDeleteAsync(id);
+        if (!vr.IsSuccess) return vr;
+
+        var entity = await _context.Resources.FindAsync(id);
+        if (entity is null) return ServiceResult.Failure("Ресурс не найден");
+
+        _context.Resources.Remove(entity);
+        await _context.SaveChangesAsync();
+        return ServiceResult.Success();
+    }
+
+    // Для фильтров (не зависят от периода)
+    public async Task<List<OptionDto>> GetFilterOptionsAsync()
+        => await _context.Resources
+            .OrderBy(r => r.Name)
+            .Select(r => new OptionDto { Id = r.Id, Name = r.Name })
+            .ToListAsync();
 }

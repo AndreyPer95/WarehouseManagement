@@ -1,83 +1,71 @@
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagement.Data;
+using WarehouseManagement.Models.Common;
 using WarehouseManagement.Models.Units;
 using WarehouseManagement.Services.Interfaces;
+using WarehouseManagement.Services.Interfaces.WarehouseManagementAPI.Services.Interfaces;
+using WarehouseManagementAPI.Dto.Common;
+using WarehouseManagementAPI.Validators.Interfaces;
 
-namespace WarehouseManagement.Services.Implementations
+public class UnitService:IUnitService
 {
-    public class UnitService : IUnitService
+    private readonly WarehouseContext _context;
+    private readonly IUnitValidator _validator;
+
+    public UnitService(WarehouseContext context, IUnitValidator validator)
     {
-        private readonly WarehouseContext _context;
-
-        public UnitService(WarehouseContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<IEnumerable<Unit>> GetAllAsync()
-        {
-            return await _context.Units.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Unit>> GetActiveAsync()
-        {
-            return await _context.Units
-                .Where(u => u.Status == UnitStatus.Active)
-                .ToListAsync();
-        }
-
-        public async Task<Unit?> GetByIdAsync(int id)
-        {
-            return await _context.Units.FindAsync(id);
-        }
-        public async Task<Unit> CreateAsync(Unit unit)
-        {
-            _context.Units.Add(unit);
-            await _context.SaveChangesAsync();
-            return unit;
-        }
-
-        public async Task<Unit> UpdateAsync(Unit unit)
-        {
-            _context.Entry(unit).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return unit;
-        }
-
-        public async Task<bool> ArchiveAsync(int id)
-        {
-            var unit = await GetByIdAsync(id);
-            if (unit == null) return false;
-
-            unit.Status = UnitStatus.Archived;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> CanDeleteAsync(int id)
-        {
-            return !await _context.ReceiptResources
-                .AnyAsync(rr => rr.UnitId == id);
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var unit = await GetByIdAsync(id);
-            if (unit == null) return false;
-
-            _context.Units.Remove(unit);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null)
-        {
-            var query = _context.Units.Where(u => u.Name == name);
-            if (excludeId.HasValue)
-            {
-                query = query.Where(u => u.Id != excludeId.Value);
-            }
-            return !await query.AnyAsync();
-        }
+        _context = context;
+        _validator = validator;
     }
+
+    public Task<List<Unit>> GetAllAsync()
+        => _context.Units.OrderBy(u => u.Name).ToListAsync();
+
+    public Task<Unit?> GetByIdAsync(int id)
+        => _context.Units.FindAsync(id).AsTask();
+
+    public async Task<ServiceResult<Unit>> CreateAsync(Unit unit)
+    {
+        var vr = await _validator.ValidateForCreateAsync(unit);
+        if (!vr.IsSuccess) return ServiceResult<Unit>.Failure(vr.ErrorMessage ?? "Ошибка валидации");
+
+        _context.Units.Add(unit);
+        await _context.SaveChangesAsync();
+        return ServiceResult<Unit>.Success(unit);
+    }
+
+    public async Task<ServiceResult<Unit>> UpdateAsync(Unit unit)
+    {
+        var vr = await _validator.ValidateForUpdateAsync(unit);
+        if (!vr.IsSuccess) return ServiceResult<Unit>.Failure(vr.ErrorMessage ?? "Ошибка валидации");
+
+        var existing = await _context.Units.FindAsync(unit.Id);
+        if (existing is null) return ServiceResult<Unit>.Failure("Единица измерения не найдена");
+
+        existing.Name = unit.Name;
+        existing.Status = unit.Status;
+        await _context.SaveChangesAsync();
+
+        return ServiceResult<Unit>.Success(existing);
+    }
+
+    public async Task<ServiceResult> DeleteAsync(int id)
+    {
+        var vr = await _validator.ValidateForDeleteAsync(id);
+        if (!vr.IsSuccess) return vr;
+
+        var entity = await _context.Units.FindAsync(id);
+        if (entity is null) return ServiceResult.Failure("Единица измерения не найдена");
+
+        _context.Units.Remove(entity);
+        await _context.SaveChangesAsync();
+        return ServiceResult.Success();
+    }
+
+    // Для фильтров (не зависят от периода)
+    public async Task<List<OptionDto>> GetFilterOptionsAsync()
+        => await _context.Units
+            .OrderBy(u => u.Name)
+            .Select(u => new OptionDto { Id = u.Id, Name = u.Name })
+            .ToListAsync();
 }

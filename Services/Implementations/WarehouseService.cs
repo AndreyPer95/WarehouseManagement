@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using WarehouseManagement.Data;
 using WarehouseManagement.Models.Warehouse;
 using WarehouseManagement.Services.Interfaces;
+using WarehouseManagementAPI.Dto.Warehouse;
 
 namespace WarehouseManagement.Services.Implementations
 {
@@ -9,71 +10,84 @@ namespace WarehouseManagement.Services.Implementations
     {
         private readonly WarehouseContext _context;
 
-        public WarehouseService(WarehouseContext context)
+        public WarehouseService(WarehouseContext context) => _context = context;
+
+        public async Task<bool> CheckAvailabilityAsync(int resourceId, int unitId, decimal qty)
         {
-            _context = context;
+            if (qty <= 0) return true;
+            var row = await _context.WarehouseBalances
+                .FirstOrDefaultAsync(b => b.ResourceId == resourceId && b.UnitId == unitId);
+            var current = row?.Quantity ?? 0m;
+            return current >= qty;
         }
 
-        public async Task<IEnumerable<WarehouseBalance>> GetBalanceAsync()
+        public async Task IncreaseBalanceAsync(int resourceId, int unitId, decimal qty)
         {
-            return await _context.WarehouseBalances
-                .Include(wb => wb.Resource)
-                .Include(wb => wb.Unit)
-                .ToListAsync();
-        }
+            if (qty <= 0) return;
 
-        public async Task<WarehouseBalance?> GetBalanceByResourceAndUnitAsync(int resourceId, int unitId)
-        {
-            return await _context.WarehouseBalances
-                .FirstOrDefaultAsync(wb => wb.ResourceId == resourceId && wb.UnitId == unitId);
-        }
+            var row = await _context.WarehouseBalances
+                .FirstOrDefaultAsync(b => b.ResourceId == resourceId && b.UnitId == unitId);
 
-        public async Task<bool> IncreaseBalanceAsync(int resourceId, int unitId, decimal quantity)
-        {
-            var balance = await GetBalanceByResourceAndUnitAsync(resourceId, unitId);            
-            if (balance == null)
+            if (row is null)
             {
-                balance = new WarehouseBalance
-                {
-                    ResourceId = resourceId,
-                    UnitId = unitId,
-                    Quantity = quantity
-                };
-                _context.WarehouseBalances.Add(balance);
+                row = new WarehouseBalance { ResourceId = resourceId, UnitId = unitId, Quantity = qty };
+                _context.WarehouseBalances.Add(row);
             }
             else
             {
-                balance.Quantity += quantity;
+                row.Quantity += qty;
             }
 
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public async Task<bool> DecreaseBalanceAsync(int resourceId, int unitId, decimal quantity)
+        public async Task DecreaseBalanceAsync(int resourceId, int unitId, decimal qty)
         {
-            var balance = await GetBalanceByResourceAndUnitAsync(resourceId, unitId);
-            
-            if (balance == null || balance.Quantity < quantity)
-            {
-                return false; 
-            }
+            if (qty <= 0) return;
 
-            balance.Quantity -= quantity;
-            
-            if (balance.Quantity == 0)
-            {
-                _context.WarehouseBalances.Remove(balance);
-            }
+            var row = await _context.WarehouseBalances
+                .FirstOrDefaultAsync(b => b.ResourceId == resourceId && b.UnitId == unitId);
 
+            if (row is null || row.Quantity < qty)
+                throw new InvalidOperationException("Недостаточно остатков для списания");
+
+            row.Quantity -= qty;
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public async Task<bool> CheckAvailabilityAsync(int resourceId, int unitId, decimal requiredQuantity)
+        public async Task<List<WarehouseBalanceRowDto>> GetBalanceAsync(List<int>? resourceIds, List<int>? unitIds)
         {
-            var balance = await GetBalanceByResourceAndUnitAsync(resourceId, unitId);
-            return balance != null && balance.Quantity >= requiredQuantity;
+            var q = _context.WarehouseBalances.AsQueryable();
+
+            if (resourceIds is { Count: > 0 })
+                q = q.Where(b => resourceIds.Contains(b.ResourceId));
+
+            if (unitIds is { Count: > 0 })
+                q = q.Where(b => unitIds.Contains(b.UnitId));
+
+            var rows = await q.ToListAsync();
+
+            // Подтянем имена одним батчем
+            var resIds = rows.Select(r => r.ResourceId).Distinct().ToList();
+            var unitIdsAll = rows.Select(r => r.UnitId).Distinct().ToList();
+
+            var resMap = await _context.Resources
+                .Where(r => resIds.Contains(r.Id))
+                .ToDictionaryAsync(r => r.Id, r => r.Name);
+
+            var unitMap = await _context.Units
+                .Where(u => unitIdsAll.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.Name);
+
+            return rows.Select(r => new WarehouseBalanceRowDto
+            {
+                ResourceId = r.ResourceId,
+                ResourceName = resMap.TryGetValue(r.ResourceId, out var rn) ? rn : r.ResourceId.ToString(),
+                UnitId = r.UnitId,
+                UnitName = unitMap.TryGetValue(r.UnitId, out var un) ? un : r.UnitId.ToString(),
+                Quantity = r.Quantity
+            }).ToList();
         }
     }
+
 }

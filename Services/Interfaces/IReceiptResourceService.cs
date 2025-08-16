@@ -1,61 +1,50 @@
 using WarehouseManagement.Models.Common;
 using WarehouseManagement.Models.Receipts;
+using WarehouseManagementAPI.Dto.Receipts;
 
 namespace WarehouseManagement.Services.Interfaces
 {
     /// <summary>
-    /// Сервис работы с документами поступления и их строками.
-    /// Все операции атомарны (транзакции) и валидируются валидаторами.
-    /// Баланс склада корректируется согласно дельтам по (ResourceId, UnitId).
+    /// Сервис для работы с документами поступления и их строками.
+    /// Серверная фильтрация (период, номера, ресурсы, единицы),
+    /// мультиселекты для номеров/ресурсов/единиц, 
+    /// выдача документов вместе с наполнением (строками).
+    /// Все изменения выполняются атомарно внутри транзакций.
     /// </summary>
     public interface IReceiptResourceService
     {
-        // -------- Receipt (шапка) --------
+        // ---------- Фильтры (значения, не зависят от периода) ----------
+        /// <summary>Список всех номеров документов поступления (distinct, для мультиселекта).</summary>
+        Task<List<string>> GetAllReceiptNumbersAsync();
 
-        /// <summary>Получить все документы поступления.</summary>
-        Task<List<Receipt>> GetAllReceiptsAsync();
-
-        /// <summary>Получить документ по идентификатору.</summary>
-        Task<Receipt?> GetReceiptByIdAsync(int id);
-
+        // ---------- Чтение / фильтрация ----------
         /// <summary>
-        /// Создать документ. Допускается пустой.
-        /// Валидируется уникальность номера.
+        /// Получить список поступлений c наполнением (строками) по серверным фильтрам.
+        /// Период (From/To), номера документов (multi), ресурсы (multi), единицы (multi).
         /// </summary>
+        Task<List<ReceiptWithLinesDto>> GetReceiptsAsync(ReceiptFilter filter);
+
+        // ---------- CRUD: шапка документа ----------
+        /// <summary>Создать документ (пустой допускается). Проверяется уникальность номера.</summary>
         Task<ServiceResult<Receipt>> CreateReceiptAsync(Receipt receipt);
 
-        /// <summary>
-        /// Обновить шапку документа (номер/дата).
-        /// Проверяется уникальность номера.
-        /// </summary>
+        /// <summary>Обновить шапку (номер/дата). Проверяется уникальность номера.</summary>
         Task<ServiceResult<Receipt>> UpdateReceiptAsync(Receipt receipt);
 
-        /// <summary>
-        /// Удалить документ. Перед удалением проверяется возможность списания всех строк со склада.
-        /// </summary>
+        /// <summary>Удалить документ. Перед удалением проверяется возможность списания всех строк со склада.</summary>
         Task<ServiceResult> DeleteReceiptAsync(int id);
 
-
-        // -------- ReceiptResources (строки) --------
-
-        /// <summary>Получить строки документа.</summary>
-        Task<List<ReceiptResource>> GetReceiptResourcesAsync(int receiptId);
+        // ---------- CRUD: строки документа ----------
+        /// <summary>Добавить строку в документ. При успехе пополняет баланс склада.</summary>
+        Task<ServiceResult<ReceiptResource>> AddResourceToReceiptAsync(ReceiptResource line);
 
         /// <summary>
-        /// Добавить строку в документ. При успехе увеличивает баланс склада.
-        /// Архивные ресурсы/единицы запрещены (если строка новая).
+        /// Полная замена строк документа (простая и читаемая операция «удалить и вставить заново»).
+        /// Сначала считается и применяется дельта к складу, затем заменяются строки.
         /// </summary>
-        Task<ServiceResult<ReceiptResource>> AddResourceToReceiptAsync(ReceiptResource newLine);
+        Task<ServiceResult> ReplaceReceiptLinesAsync(int receiptId, List<ReceiptResource> newLines);
 
-        /// <summary>
-        /// Полная замена набора строк документа.
-        /// Считается дельта по складу: сначала списания, затем пополнения.
-        /// </summary>
-        Task<ServiceResult> UpdateReceiptResourcesAsync(int receiptId, List<ReceiptResource> newLines);
-
-        /// <summary>
-        /// Удалить строку документа. Перед удалением проверяется возможность списания её количества.
-        /// </summary>
-        Task<ServiceResult> DeleteReceiptResourceAsync(int receiptResourceId);
+        /// <summary>Удалить одну строку документа. Перед удалением проверяется возможность списания её количества.</summary>
+        Task<ServiceResult> DeleteReceiptLineAsync(int receiptResourceId);
     }
 }

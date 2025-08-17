@@ -43,7 +43,6 @@ public class UnitService:IUnitService
         if (existing is null) return ServiceResult<Unit>.Failure("Единица измерения не найдена");
 
         existing.Name = unit.Name;
-        existing.Status = unit.Status;
         await _context.SaveChangesAsync();
 
         return ServiceResult<Unit>.Success(existing);

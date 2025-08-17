@@ -15,8 +15,11 @@ namespace WarehouseManagementAPI.Validators.Implementations
         public async Task<ServiceResult> ValidateForCreateAsync(Resource resource)
         {
             var errors = new List<string>();
-
-            if (await NameExistsAsync(resource.Name))
+            var name = resource.Name;
+            if (string.IsNullOrWhiteSpace(name))
+                errors.Add("Наименование обязательно");
+            
+            if (await NameExistsAsync(name))
                 errors.Add($"Ресурс с именем '{resource.Name}' уже существует");
 
             return errors.Any() ? ServiceResult.Failure(errors) : ServiceResult.Success();
@@ -32,6 +35,9 @@ namespace WarehouseManagementAPI.Validators.Implementations
                 errors.Add($"Ресурс с ID {resource.Id} не найден");
                 return ServiceResult.Failure(errors);
             }
+
+            if (string.IsNullOrWhiteSpace(resource.Name))
+                errors.Add("Наименование обязательно");
 
             if (await NameExistsAsync(resource.Name, excludeId: resource.Id))
                 errors.Add($"Ресурс с именем '{resource.Name}' уже существует");

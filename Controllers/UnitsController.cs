@@ -51,6 +51,34 @@ namespace WarehouseManagementAPI.Controllers
             return Ok(unit);
         }
 
+        [HttpPost("{id:int}/archive")]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var entity = await _service.GetByIdAsync(id);
+            if (entity is null) return NotFound();
+
+            if (entity.Status == UnitStatus.Archived) return NoContent();
+            entity.Status = UnitStatus.Archived;
+
+            var result = await _service.UpdateAsync(entity);
+            if (!result.IsSuccess) return BadRequest(ApiErrors.From(result));
+            return NoContent();
+        }
+
+        [HttpPost("{id:int}/restore")]
+        public async Task<IActionResult> Restore(int id)
+        {
+            var entity = await _service.GetByIdAsync(id);
+            if (entity is null) return NotFound();
+
+            if (entity.Status == UnitStatus.Active) return NoContent();
+            entity.Status = UnitStatus.Active;
+
+            var result = await _service.UpdateAsync(entity);
+            if (!result.IsSuccess) return BadRequest(ApiErrors.From(result));
+            return NoContent();
+        }
+
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

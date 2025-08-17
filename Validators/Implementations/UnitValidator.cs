@@ -15,8 +15,11 @@ namespace WarehouseManagementAPI.Validators.Implementations
         public async Task<ServiceResult> ValidateForCreateAsync(Unit unit)
         {
             var errors = new List<string>();
+            var name = unit.Name;
+            if (string.IsNullOrWhiteSpace(name))
+                errors.Add("Наименование обязательно");
 
-            if (await NameExistsAsync(unit.Name))
+            if (await NameExistsAsync(name))
                 errors.Add($"Единица измерения с именем '{unit.Name}' уже существует");
 
             return errors.Any() ? ServiceResult.Failure(errors) : ServiceResult.Success();
@@ -32,6 +35,9 @@ namespace WarehouseManagementAPI.Validators.Implementations
                 errors.Add($"Единица измерения с ID {unit.Id} не найдена");
                 return ServiceResult.Failure(errors);
             }
+
+            if (string.IsNullOrWhiteSpace(unit.Name))
+                errors.Add("Наименование обязательно");
 
             if (await NameExistsAsync(unit.Name, excludeId: unit.Id))
                 errors.Add($"Единица измерения с именем '{unit.Name}' уже существует");

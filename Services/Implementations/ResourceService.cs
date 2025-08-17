@@ -42,7 +42,6 @@ public class ResourceService : IResourceService
         if (existing is null) return ServiceResult<Resource>.Failure("Ресурс не найден");
 
         existing.Name = resource.Name;
-        existing.Status = resource.Status;
         await _context.SaveChangesAsync();
 
         return ServiceResult<Resource>.Success(existing);

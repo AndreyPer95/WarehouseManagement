@@ -61,7 +61,8 @@ namespace WarehouseManagementAPI.Controllers
             entity.Status = UnitStatus.Archived;
 
             var result = await _service.UpdateAsync(entity);
-            if (!result.IsSuccess) return BadRequest(ApiErrors.From(result));
+            if (!result.IsSuccess) 
+                return BadRequest(result.Errors?.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
             return NoContent();
         }
 
@@ -75,7 +76,8 @@ namespace WarehouseManagementAPI.Controllers
             entity.Status = UnitStatus.Active;
 
             var result = await _service.UpdateAsync(entity);
-            if (!result.IsSuccess) return BadRequest(ApiErrors.From(result));
+            if (!result.IsSuccess) 
+                return BadRequest(result.Errors?.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
             return NoContent();
         }
 

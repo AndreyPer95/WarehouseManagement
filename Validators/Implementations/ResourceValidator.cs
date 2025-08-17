@@ -60,13 +60,12 @@ namespace WarehouseManagementAPI.Validators.Implementations
 
         private Task<bool> NameExistsAsync(string name, int? excludeId = null)
         {
-            var normalized = Normalize(name);
-            var query = _context.Resources.Where(r => Normalize(r.Name) == normalized);
+            var normalized = (name ?? string.Empty).Trim().ToUpper();
+            var query = _context.Resources.AsNoTracking()
+                                .Where(r => r.Name != null && r.Name.Trim().ToUpper() == normalized); 
             if (excludeId.HasValue)
                 query = query.Where(r => r.Id != excludeId.Value);
             return query.AnyAsync();
         }
-
-        private static string Normalize(string s) => (s ?? string.Empty).Trim().ToUpperInvariant();//заменить
     }
 }

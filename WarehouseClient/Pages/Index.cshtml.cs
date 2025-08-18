@@ -20,33 +20,33 @@ namespace WarehouseClient.Pages
         public SelectList UnitsList { get; set; } = new(Enumerable.Empty<SelectListItem>());
 
         [BindProperty(SupportsGet = true)]
-        public int? ResourceId { get; set; }
+        public List<int>? ResourceIds { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public int? UnitId { get; set; }
+        public List<int>? UnitIds { get; set; }
 
         public async Task OnGetAsync()
         {
-            // Получаем все балансы
-            var allBalances = await _apiService.GetWarehouseBalanceAsync();
-            
-            // Фильтруем если нужно
-            Balances = allBalances;
-            if (ResourceId.HasValue)
-            {
-                Balances = Balances.Where(b => b.ResourceId == ResourceId.Value).ToList();
-            }
-            if (UnitId.HasValue)
-            {
-                Balances = Balances.Where(b => b.UnitId == UnitId.Value).ToList();
-            }
+            // Получаем отфильтрованные балансы с сервера
+            Balances = await _apiService.GetWarehouseBalanceAsync(ResourceIds, UnitIds);
 
             // Получаем списки для фильтров
             var resources = await _apiService.GetResourcesAsync();
             var units = await _apiService.GetUnitsAsync();
 
-            ResourcesList = new SelectList(resources, "Id", "Name", ResourceId);
-            UnitsList = new SelectList(units, "Id", "Name", UnitId);
+            ResourcesList = new SelectList(resources.Select(r => new SelectListItem
+            {
+                Value = r.Id.ToString(),
+                Text = r.Name,
+                Selected = ResourceIds?.Contains(r.Id) ?? false
+            }), "Value", "Text");
+            
+            UnitsList = new SelectList(units.Select(u => new SelectListItem
+            {
+                Value = u.Id.ToString(),
+                Text = u.Name,
+                Selected = UnitIds?.Contains(u.Id) ?? false
+            }), "Value", "Text");
         }
     }
 }

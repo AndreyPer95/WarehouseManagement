@@ -18,6 +18,7 @@ namespace WarehouseClient.Pages.Receipts
         public List<Receipt> Receipts { get; set; } = new();
         public SelectList ResourcesList { get; set; } = new(Enumerable.Empty<SelectListItem>());
         public SelectList UnitsList { get; set; } = new(Enumerable.Empty<SelectListItem>());
+        public SelectList NumbersList { get; set; } = new(Enumerable.Empty<SelectListItem>());
 
         [BindProperty(SupportsGet = true)]
         public DateTime? DateFrom { get; set; }
@@ -26,65 +27,61 @@ namespace WarehouseClient.Pages.Receipts
         public DateTime? DateTo { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public string? Number { get; set; }
+        public List<string>? Numbers { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public int? ResourceId { get; set; }
+        public List<int>? ResourceIds { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public int? UnitId { get; set; }
+        public List<int>? UnitIds { get; set; }
 
         public async Task OnGetAsync()
         {
             try
             {
-                // Получаем все поступления
-                var allReceipts = await _apiService.GetReceiptsAsync();
-                
-                // Фильтруем если нужно
-                Receipts = allReceipts ?? new List<Receipt>();
-                
-                if (DateFrom.HasValue)
-                {
-                    Receipts = Receipts.Where(r => r.Date >= DateFrom.Value).ToList();
-                }
-                
-                if (DateTo.HasValue)
-                {
-                    Receipts = Receipts.Where(r => r.Date <= DateTo.Value).ToList();
-                }
-                
-                if (!string.IsNullOrEmpty(Number))
-                {
-                    Receipts = Receipts.Where(r => r.Number.Contains(Number, StringComparison.OrdinalIgnoreCase)).ToList();
-                }
-                
-                if (ResourceId.HasValue)
-                {
-                    Receipts = Receipts.Where(r => r.ReceiptResources != null && 
-                        r.ReceiptResources.Any(rr => rr.ResourceId == ResourceId.Value)).ToList();
-                }
-                
-                if (UnitId.HasValue)
-                {
-                    Receipts = Receipts.Where(r => r.ReceiptResources != null && 
-                        r.ReceiptResources.Any(rr => rr.UnitId == UnitId.Value)).ToList();
-                }
+                // Получаем фильтрованные поступления с сервера
+                Receipts = await _apiService.GetFilteredReceiptsAsync(
+                    DateFrom, 
+                    DateTo, 
+                    Numbers, 
+                    ResourceIds, 
+                    UnitIds) ?? new List<Receipt>();
 
-                // Получаем списки для фильтров
+                // Получаем все доступные номера документов для фильтра
+                var allNumbers = await _apiService.GetReceiptNumbersAsync() ?? new List<string>();
+                NumbersList = new SelectList(allNumbers.Select(n => new SelectListItem 
+                { 
+                    Value = n, 
+                    Text = n,
+                    Selected = Numbers?.Contains(n) ?? false
+                }), "Value", "Text");
+
+                // Получаем списки ресурсов и единиц для фильтров
                 var resources = await _apiService.GetResourcesAsync() ?? new List<Resource>();
                 var units = await _apiService.GetUnitsAsync() ?? new List<Unit>();
 
-                ResourcesList = new SelectList(resources, "Id", "Name", ResourceId);
-                UnitsList = new SelectList(units, "Id", "Name", UnitId);
+                ResourcesList = new SelectList(resources.Select(r => new SelectListItem
+                {
+                    Value = r.Id.ToString(),
+                    Text = r.Name,
+                    Selected = ResourceIds?.Contains(r.Id) ?? false
+                }), "Value", "Text");
+
+                UnitsList = new SelectList(units.Select(u => new SelectListItem
+                {
+                    Value = u.Id.ToString(),
+                    Text = u.Name,
+                    Selected = UnitIds?.Contains(u.Id) ?? false
+                }), "Value", "Text");
             }
             catch (Exception ex)
             {
                 // Логируем ошибку и устанавливаем пустые данные
                 Console.WriteLine($"Error loading receipts: {ex.Message}");
                 Receipts = new List<Receipt>();
-                ResourcesList = new SelectList(Enumerable.Empty<Resource>(), "Id", "Name");
-                UnitsList = new SelectList(Enumerable.Empty<Unit>(), "Id", "Name");
+                ResourcesList = new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text");
+                UnitsList = new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text");
+                NumbersList = new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text");
             }
         }
     }

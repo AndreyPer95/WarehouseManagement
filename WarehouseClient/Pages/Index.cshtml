@@ -11,20 +11,21 @@
 
     <form method="get" class="filters">
         <div class="filter-group">
-            <label for="resourceFilter">Ресурс</label>
-            <select id="resourceFilter" name="resourceId" asp-items="Model.ResourcesList">
-                <option value="">Выберите</option>
+            <label for="resourceFilter">Ресурсы</label>
+            <select id="resourceFilter" name="resourceIds" multiple asp-items="Model.ResourcesList">
+                <option value="">-- Все ресурсы --</option>
             </select>
         </div>
         
         <div class="filter-group">
-            <label for="unitFilter">Единица измерения</label>
-            <select id="unitFilter" name="unitId" asp-items="Model.UnitsList">
-                <option value="">Выберите</option>
+            <label for="unitFilter">Единицы измерения</label>
+            <select id="unitFilter" name="unitIds" multiple asp-items="Model.UnitsList">
+                <option value="">-- Все единицы --</option>
             </select>
         </div>
         
         <button type="submit" class="btn btn-primary">Применить</button>
+        <a href="/" class="btn btn-secondary">Сбросить</a>
     </form>
 
     <table class="data-table">

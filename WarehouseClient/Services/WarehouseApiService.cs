@@ -55,7 +55,7 @@ namespace WarehouseClient.Services
 
         public async Task<bool> ArchiveResourceAsync(int id)
         {
-            var response = await _httpClient.PutAsync($"api/resources/{id}/archive", null);
+            var response = await _httpClient.PostAsync($"api/resources/{id}/archive", null);
             return response.IsSuccessStatusCode;
         }
 
@@ -96,9 +96,10 @@ namespace WarehouseClient.Services
 
         public async Task<bool> ArchiveUnitAsync(int id)
         {
-            var response = await _httpClient.PutAsync($"api/units/{id}/archive", null);
+            var response = await _httpClient.PostAsync($"api/units/{id}/archive", null);
             return response.IsSuccessStatusCode;
         }
+        
         // Receipts
         public async Task<List<Receipt>> GetReceiptsAsync()
         {
@@ -106,6 +107,81 @@ namespace WarehouseClient.Services
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<Receipt>>(json, _jsonOptions) ?? new List<Receipt>();
+        }
+
+        // Новый метод для получения фильтрованных поступлений
+        public async Task<List<Receipt>> GetFilteredReceiptsAsync(
+            DateTime? dateFrom, 
+            DateTime? dateTo, 
+            List<string>? numbers, 
+            List<int>? resourceIds, 
+            List<int>? unitIds)
+        {
+            var queryParams = new List<string>();
+            
+            if (dateFrom.HasValue)
+                queryParams.Add($"from={dateFrom.Value:yyyy-MM-dd}");
+            
+            if (dateTo.HasValue)
+                queryParams.Add($"to={dateTo.Value:yyyy-MM-dd}");
+            
+            if (numbers != null && numbers.Any())
+            {
+                foreach (var number in numbers)
+                    queryParams.Add($"numbers={Uri.EscapeDataString(number)}");
+            }
+            
+            if (resourceIds != null && resourceIds.Any())
+            {
+                foreach (var id in resourceIds)
+                    queryParams.Add($"resourceIds={id}");
+            }
+            
+            if (unitIds != null && unitIds.Any())
+            {
+                foreach (var id in unitIds)
+                    queryParams.Add($"unitIds={id}");
+            }
+            
+            var queryString = queryParams.Any() ? "?" + string.Join("&", queryParams) : "";
+            var response = await _httpClient.GetAsync($"api/receipts{queryString}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            
+            // Десериализация DTO с линиями и преобразование в модель Receipt
+            var receiptsDto = JsonSerializer.Deserialize<List<ReceiptWithLinesDto>>(json, _jsonOptions) ?? new List<ReceiptWithLinesDto>();
+            
+            // Преобразуем DTO в модели для отображения
+            var receipts = new List<Receipt>();
+            foreach (var dto in receiptsDto)
+            {
+                var receipt = new Receipt
+                {
+                    Id = dto.Id,
+                    Number = dto.Number,
+                    Date = dto.Date,
+                    ReceiptResources = dto.Lines?.Select(l => new ReceiptResource
+                    {
+                        ResourceId = l.ResourceId,
+                        Resource = new Resource { Id = l.ResourceId, Name = l.ResourceName },
+                        UnitId = l.UnitId,
+                        Unit = new Unit { Id = l.UnitId, Name = l.UnitName },
+                        Quantity = l.Quantity
+                    }).ToList() ?? new List<ReceiptResource>()
+                };
+                receipts.Add(receipt);
+            }
+            
+            return receipts;
+        }
+
+        // Новый метод для получения номеров документов
+        public async Task<List<string>> GetReceiptNumbersAsync()
+        {
+            var response = await _httpClient.GetAsync("api/receipts/filters/numbers");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<string>>(json, _jsonOptions) ?? new List<string>();
         }
 
         public async Task<Receipt?> GetReceiptByIdAsync(int id)
@@ -134,12 +210,45 @@ namespace WarehouseClient.Services
         }
 
         // Warehouse Balance
-        public async Task<List<WarehouseBalance>> GetWarehouseBalanceAsync()
+        public async Task<List<WarehouseBalance>> GetWarehouseBalanceAsync(List<int>? resourceIds = null, List<int>? unitIds = null)
         {
-            var response = await _httpClient.GetAsync("api/warehouse/balance");
+            var queryParams = new List<string>();
+            
+            if (resourceIds != null && resourceIds.Any())
+            {
+                foreach (var id in resourceIds)
+                    queryParams.Add($"resourceIds={id}");
+            }
+            
+            if (unitIds != null && unitIds.Any())
+            {
+                foreach (var id in unitIds)
+                    queryParams.Add($"unitIds={id}");
+            }
+            
+            var queryString = queryParams.Any() ? "?" + string.Join("&", queryParams) : "";
+            var response = await _httpClient.GetAsync($"api/warehouse/balance{queryString}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<WarehouseBalance>>(json, _jsonOptions) ?? new List<WarehouseBalance>();
+        }
+        
+        // DTO классы для получения данных с сервера
+        private class ReceiptWithLinesDto
+        {
+            public int Id { get; set; }
+            public string Number { get; set; } = string.Empty;
+            public DateTime Date { get; set; }
+            public List<ReceiptLineDto>? Lines { get; set; }
+        }
+        
+        private class ReceiptLineDto
+        {
+            public int ResourceId { get; set; }
+            public string ResourceName { get; set; } = string.Empty;
+            public int UnitId { get; set; }
+            public string UnitName { get; set; } = string.Empty;
+            public decimal Quantity { get; set; }
         }
     }
 }

@@ -19,25 +19,28 @@
         </div>
         
         <div class="filter-group">
-            <label>Номер поступления</label>
-            <input type="text" name="number" value="@Model.Number" placeholder="Выберите" />
-        </div>
-        
-        <div class="filter-group">
-            <label>Ресурс</label>
-            <select name="resourceId" asp-items="Model.ResourcesList">
-                <option value="">Выберите</option>
+            <label>Номера поступлений</label>
+            <select name="numbers" multiple asp-items="Model.NumbersList">
+                <option value="">-- Все номера --</option>
             </select>
         </div>
         
         <div class="filter-group">
-            <label>Единица измерения</label>
-            <select name="unitId" asp-items="Model.UnitsList">
-                <option value="">Выберите</option>
+            <label>Ресурсы</label>
+            <select name="resourceIds" multiple asp-items="Model.ResourcesList">
+                <option value="">-- Все ресурсы --</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label>Единицы измерения</label>
+            <select name="unitIds" multiple asp-items="Model.UnitsList">
+                <option value="">-- Все единицы --</option>
             </select>
         </div>
         
         <button type="submit" class="btn btn-primary">Применить</button>
+        <a href="/Receipts" class="btn btn-secondary">Сбросить</a>
         <a href="/Receipts/Create" class="btn btn-success">Добавить</a>
     </form>
 

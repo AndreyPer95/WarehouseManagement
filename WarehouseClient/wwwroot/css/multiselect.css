@@ -1,0 +1,197 @@
+/* Кастомный мультиселект */
+.multiselect-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    min-width: 200px;
+}
+
+.multiselect-display {
+    border: 1px solid #ddd;
+    padding: 8px 35px 8px 12px;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.multiselect-wrapper.active .multiselect-display {
+    border-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+.multiselect-display:hover {
+    border-color: #999;
+}
+
+.multiselect-display .placeholder {
+    color: #999;
+}
+
+.multiselect-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    transition: transform 0.2s;
+    pointer-events: none;
+}
+
+.multiselect-wrapper.active .multiselect-arrow {
+    transform: translateY(-50%) rotate(180deg);
+}
+.multiselect-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.multiselect-dropdown.show {
+    display: block;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.multiselect-search {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.multiselect-search-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.multiselect-search-input:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+.multiselect-options-container {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.multiselect-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.multiselect-option:hover {
+    background-color: #f5f5f5;
+}
+
+.multiselect-option label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+}
+
+.multiselect-option input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+.multiselect-option.all-option {
+    font-weight: 600;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+}
+
+.multiselect-separator {
+    height: 1px;
+    background-color: #eee;
+    margin: 4px 0;
+}
+
+.multiselect-option span {
+    user-select: none;
+}
+
+/* Стили для чекбоксов */
+.multiselect-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: white;
+    position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    flex-shrink: 0;
+}
+
+.multiselect-option input[type="checkbox"]:checked {
+    background-color: #0066cc;
+    border-color: #0066cc;
+}
+
+.multiselect-option input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.multiselect-option input[type="checkbox"]:indeterminate {
+    background-color: #0066cc;
+    border-color: #0066cc;
+}
+
+.multiselect-option input[type="checkbox"]:indeterminate::after {
+    content: '−';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Адаптация под существующие стили */
+.filter-group .multiselect-wrapper {
+    margin-top: 5px;
+}
+
+.filter-group small {
+    display: none !important; /* Скрываем подсказку про Ctrl */
+}

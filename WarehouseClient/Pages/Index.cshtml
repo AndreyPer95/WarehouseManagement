@@ -40,8 +40,8 @@
             @foreach (var item in Model.Balances)
             {
                 <tr>
-                    <td>@item.Resource?.Name</td>
-                    <td>@item.Unit?.Name</td>
+                    <td>@item.ResourceName</td>
+                    <td>@item.UnitName</td>
                     <td>@item.Quantity.ToString("N2")</td>
                 </tr>
             }

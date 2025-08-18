@@ -1,4 +1,4 @@
-namespace WarehouseClient.Models.Dto
+namespace WarehouseClient.Dto
 {
     public class ReceiptWithLinesDto
     {

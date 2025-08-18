@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using WarehouseClient.Models;
+using WarehouseClient.Models.Dto;
 
 namespace WarehouseClient.Services
 {
@@ -210,7 +211,7 @@ namespace WarehouseClient.Services
         }
 
         // Warehouse Balance
-        public async Task<List<WarehouseBalance>> GetWarehouseBalanceAsync(List<int>? resourceIds = null, List<int>? unitIds = null)
+        public async Task<List<WarehouseBalanceRowDto>> GetWarehouseBalanceAsync(List<int>? resourceIds = null, List<int>? unitIds = null)
         {
             var queryParams = new List<string>();
             
@@ -230,7 +231,7 @@ namespace WarehouseClient.Services
             var response = await _httpClient.GetAsync($"api/warehouse/balance{queryString}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<List<WarehouseBalance>>(json, _jsonOptions) ?? new List<WarehouseBalance>();
+            return JsonSerializer.Deserialize<List<WarehouseBalanceRowDto>>(json, _jsonOptions) ?? new List<WarehouseBalanceRowDto>();
         }
         
         // DTO классы для получения данных с сервера

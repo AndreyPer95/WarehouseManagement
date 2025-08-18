@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WarehouseClient.Models;
+using WarehouseClient.Models.Dto;
 using WarehouseClient.Services;
 
 namespace WarehouseClient.Pages
@@ -15,7 +16,7 @@ namespace WarehouseClient.Pages
             _apiService = apiService;
         }
 
-        public List<WarehouseBalance> Balances { get; set; } = new();
+        public List<WarehouseBalanceRowDto> Balances { get; set; } = new();
         public SelectList ResourcesList { get; set; } = new(Enumerable.Empty<SelectListItem>());
         public SelectList UnitsList { get; set; } = new(Enumerable.Empty<SelectListItem>());
 

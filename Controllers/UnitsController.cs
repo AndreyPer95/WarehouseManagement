@@ -17,6 +17,14 @@ namespace WarehouseManagementAPI.Controllers
         public async Task<ActionResult<List<Unit>>> GetAll()
             => Ok(await _service.GetAllAsync());
 
+        [HttpGet("active")]
+        public async Task<ActionResult<List<Unit>>> GetActive()
+        {
+            var all = await _service.GetAllAsync();
+            var activeUnits = all.Where(u => u.Status == UnitStatus.Active).ToList();
+            return Ok(activeUnits);
+        }
+
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Unit>> GetById(int id)
         {

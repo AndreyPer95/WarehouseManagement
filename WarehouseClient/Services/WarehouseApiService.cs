@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using WarehouseClient.Dto;
 using WarehouseClient.Models;
 using WarehouseClient.Models.Dto;
 
@@ -232,24 +233,6 @@ namespace WarehouseClient.Services
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<List<WarehouseBalanceRowDto>>(json, _jsonOptions) ?? new List<WarehouseBalanceRowDto>();
-        }
-        
-        // DTO классы для получения данных с сервера
-        private class ReceiptWithLinesDto
-        {
-            public int Id { get; set; }
-            public string Number { get; set; } = string.Empty;
-            public DateTime Date { get; set; }
-            public List<ReceiptLineDto>? Lines { get; set; }
-        }
-        
-        private class ReceiptLineDto
-        {
-            public int ResourceId { get; set; }
-            public string ResourceName { get; set; } = string.Empty;
-            public int UnitId { get; set; }
-            public string UnitName { get; set; } = string.Empty;
-            public decimal Quantity { get; set; }
         }
     }
 }

@@ -27,7 +27,6 @@ namespace WarehouseManagementAPI.Controllers
             _units = units;
         }
 
-        // --- список поступлений с наполнением + серверные фильтры ---
         [HttpGet]
         public async Task<ActionResult<List<ReceiptWithLinesDto>>> Get(
             [FromQuery] DateTime? from,
@@ -62,15 +61,17 @@ namespace WarehouseManagementAPI.Controllers
         public async Task<ActionResult<List<OptionDto>>> Units()
             => Ok(await _units.GetFilterOptionsAsync());
 
-        // --- CRUD шапки документа ---
         [HttpPost]
         public async Task<ActionResult<Receipt>> Create([FromBody] Receipt receipt)
         {
             var result = await _service.CreateReceiptAsync(receipt);
             if (!result.IsSuccess)
                 return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
+            //var resultWithLine = await _service.AddResourceToReceiptAsync(line);
+            //if (!result.IsSuccess)
+            //    return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
 
-            return Ok(receipt);
+            return Ok(result.Data);
         }
 
         [HttpPut("{id:int}")]
@@ -83,7 +84,7 @@ namespace WarehouseManagementAPI.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
 
-            return Ok(receipt);
+            return Ok(result.Data);
         }
 
         [HttpDelete("{id:int}")]
@@ -96,7 +97,6 @@ namespace WarehouseManagementAPI.Controllers
             return NoContent();
         }
 
-        // --- CRUD строк документа ---
         [HttpPost("lines")]
         public async Task<ActionResult<ReceiptResource>> AddLine([FromBody] ReceiptResource line)
         {
@@ -104,7 +104,7 @@ namespace WarehouseManagementAPI.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
 
-            return Ok(line);
+            return Ok(result.Data);
         }
 
         [HttpPut("lines/replace/{receiptId:int}")]

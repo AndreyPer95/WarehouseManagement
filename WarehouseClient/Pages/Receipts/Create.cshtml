@@ -4,55 +4,92 @@
     ViewData["Title"] = "Создать поступление";
 }
 
-<div class="content-wrapper">
-    <div class="page-header">
-        <h1>Создать поступление</h1>
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Номер</label>
+            <input asp-for="Receipt.Number" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Дата</label>
+            <input asp-for="Receipt.Date" type="date" class="form-control" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end justify-content-end">
+            <button type="submit" class="btn btn-success">Сохранить</button>
+        </div>
     </div>
 
-    <form method="post">
-        <div asp-validation-summary="All" class="text-danger"></div>
-        
-        <div class="form-group">
-            <label asp-for="Receipt.Number"></label>
-            <input asp-for="Receipt.Number" class="form-control" />
-            <span asp-validation-for="Receipt.Number" class="text-danger"></span>
-        </div>
-        
-        <div class="form-group">
-            <label asp-for="Receipt.Date"></label>
-            <input asp-for="Receipt.Date" type="date" class="form-control" />
-            <span asp-validation-for="Receipt.Date" class="text-danger"></span>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-secondary">
+                <tr>
+                    <th style="width:48px">
+                        <button id="btnAddRow" type="button" class="btn btn-sm btn-success">+</button>
+                    </th>
+                    <th>Ресурс</th>
+                    <th style="width:300px">Единица измерения</th>
+                    <th style="width:200px">Количество</th>
+                </tr>
+            </thead>
+            <tbody id="rows">
+            </tbody>
+        </table>
+    </div>
+</form>
 
-        <h3>Ресурсы</h3>
-        <div id="resources-container">
-            <div class="resource-item">
-                <div class="form-group">
-                    <label>Ресурс</label>
-                    <select name="ResourceIds" class="form-control" asp-items="Model.ResourcesList">
-                        <option value="">Выберите ресурс</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Единица измерения</label>
-                    <select name="UnitIds" class="form-control" asp-items="Model.UnitsList">
-                        <option value="">Выберите единицу</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Количество</label>
-                    <input type="number" step="0.01" name="Quantities" class="form-control" />
-                </div>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <button type="submit" class="btn btn-success">Создать</button>
-            <a href="/Receipts" class="btn">Отмена</a>
-        </div>
-    </form>
-</div>
+<!-- Шаблон строки (клонируется JS). __index__ будет заменён на номер строки -->
+<table class="d-none">
+    <tbody>
+        <tr id="row-template">
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger btn-remove">x</button>
+            </td>
+            <td>
+                <input type="text" class="form-control" name="Lines[__index__].ResourceId" />
+            </td>
+            <td>
+                <input type="text" class="form-control" name="Lines[__index__].UnitId" />
+            </td>
+            <td>
+                <input type="text" class="form-control" name="Lines[__index__].Quantity" />
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const rows = document.getElementById('rows');
+            const template = document.getElementById('row-template');
+
+            function addRow() {
+                const idx = rows.children.length;
+                const clone = template.cloneNode(true);
+                clone.id = '';
+                clone.innerHTML = clone.innerHTML.replaceAll('__index__', idx);
+                rows.appendChild(clone);
+
+                clone.querySelector('.btn-remove').addEventListener('click', function () {
+                    clone.remove();
+                    renumber();
+                });
+            }
+
+            function renumber() {
+                // пересчёт имён после удаления: Lines[0].*, Lines[1].*, ...
+                [...rows.children].forEach((tr, i) => {
+                    tr.querySelectorAll('select, input').forEach(el => {
+                        el.name = el.name.replace(/Lines\[\d+\]/, `Lines[${i}]`);
+                    });
+                });
+            }
+
+            document.getElementById('btnAddRow').addEventListener('click', addRow);
+        })();
+    </script>
 }

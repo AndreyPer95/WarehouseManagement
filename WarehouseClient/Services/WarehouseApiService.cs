@@ -55,6 +55,26 @@ namespace WarehouseClient.Services
             return JsonSerializer.Deserialize<Resource>(responseJson, _jsonOptions)!;
         }
 
+        public async Task<bool> UpdateResourceAsync(Resource resource)
+        {
+            var json = JsonSerializer.Serialize(resource);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"api/resources/{resource.Id}", content);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteResourceAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"api/resources/{id}");
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> RestoreResourceAsync(int id)
+        {
+            var response = await _httpClient.PostAsync($"api/resources/{id}/restore", null);
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<bool> ArchiveResourceAsync(int id)
         {
             var response = await _httpClient.PostAsync($"api/resources/{id}/archive", null);
@@ -96,6 +116,26 @@ namespace WarehouseClient.Services
             return JsonSerializer.Deserialize<Unit>(responseJson, _jsonOptions)!;
         }
 
+        public async Task<bool> UpdateUnitAsync(Unit unit)
+        {
+            var json = JsonSerializer.Serialize(unit);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"api/units/{unit.Id}", content);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteUnitAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"api/units/{id}");
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> RestoreUnitAsync(int id)
+        {
+            var response = await _httpClient.PostAsync($"api/units/{id}/restore", null);
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<bool> ArchiveUnitAsync(int id)
         {
             var response = await _httpClient.PostAsync($"api/units/{id}/archive", null);
@@ -111,7 +151,6 @@ namespace WarehouseClient.Services
             return JsonSerializer.Deserialize<List<Receipt>>(json, _jsonOptions) ?? new List<Receipt>();
         }
 
-        // Новый метод для получения фильтрованных поступлений
         public async Task<List<Receipt>> GetFilteredReceiptsAsync(
             DateTime? dateFrom, 
             DateTime? dateTo, 
@@ -150,10 +189,8 @@ namespace WarehouseClient.Services
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             
-            // Десериализация DTO с линиями и преобразование в модель Receipt
             var receiptsDto = JsonSerializer.Deserialize<List<ReceiptWithLinesDto>>(json, _jsonOptions) ?? new List<ReceiptWithLinesDto>();
             
-            // Преобразуем DTO в модели для отображения
             var receipts = new List<Receipt>();
             foreach (var dto in receiptsDto)
             {
@@ -177,7 +214,6 @@ namespace WarehouseClient.Services
             return receipts;
         }
 
-        // Новый метод для получения номеров документов
         public async Task<List<string>> GetReceiptNumbersAsync()
         {
             var response = await _httpClient.GetAsync("api/receipts/filters/numbers");
@@ -211,7 +247,44 @@ namespace WarehouseClient.Services
             return response.IsSuccessStatusCode;
         }
 
-        // Warehouse Balance
+        public async Task<List<ReceiptResource>> GetReceiptResourcesAsync(int receiptId)
+        {
+            var response = await _httpClient.GetAsync($"api/receipts/{receiptId}/resources");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<List<ReceiptResource>>(json, _jsonOptions) ?? new List<ReceiptResource>();
+        }
+
+        public async Task<bool> AddReceiptLineAsync(ReceiptResource line)
+        {
+            var json = JsonSerializer.Serialize(line);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync("api/receipts/lines", content);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> ReplaceReceiptLinesAsync(int receiptId, List<ReceiptResource> lines)
+        {
+            var json = JsonSerializer.Serialize(lines);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"api/receipts/lines/replace/{receiptId}", content);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteReceiptLineAsync(int lineId)
+        {
+            var response = await _httpClient.DeleteAsync($"api/receipts/lines/{lineId}");
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UpdateReceiptAsync(Receipt receipt)
+        {
+            var json = JsonSerializer.Serialize(receipt);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"api/receipts/{receipt.Id}", content);
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<List<WarehouseBalanceRowDto>> GetWarehouseBalanceAsync(List<int>? resourceIds = null, List<int>? unitIds = null)
         {
             var queryParams = new List<string>();

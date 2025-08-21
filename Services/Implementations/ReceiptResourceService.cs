@@ -25,8 +25,6 @@ public class ReceiptResourceService : IReceiptResourceService
         _lineValidator = lineValidator;
     }
 
-    // ---------- ФИЛЬТРЫ (НЕ зависят от периода) ----------
-
     public async Task<List<string>> GetAllReceiptNumbersAsync()
         => await _context.Receipts
             .Select(r => r.Number)
@@ -34,11 +32,8 @@ public class ReceiptResourceService : IReceiptResourceService
             .OrderBy(n => n)
             .ToListAsync();
 
-    // ---------- Списки / чтение ----------
-
     public async Task<List<ReceiptWithLinesDto>> GetReceiptsAsync(ReceiptFilter filter)
     {
-        // 1) Базовый запрос по поступлениям
         var rq = _context.Receipts.AsQueryable();
 
         if (filter.From.HasValue)
@@ -46,14 +41,13 @@ public class ReceiptResourceService : IReceiptResourceService
 
         if (filter.To.HasValue)
         {
-            var to = filter.To.Value.Date.AddDays(1); // включительно
+            var to = filter.To.Value.Date.AddDays(1); 
             rq = rq.Where(r => r.Date < to);
         }
 
         if (filter.Numbers is { Count: > 0 })
             rq = rq.Where(r => filter.Numbers.Contains(r.Number));
 
-        // Фильтры по ресурсам/единицам — через ReceiptResources
         if (filter.ResourceIds is { Count: > 0 } || filter.UnitIds is { Count: > 0 })
         {
             var lr = _context.ReceiptResources.AsQueryable();
@@ -73,13 +67,11 @@ public class ReceiptResourceService : IReceiptResourceService
         if (receipts.Count == 0)
             return new List<ReceiptWithLinesDto>();
 
-        // 2) Подтянуть строки выбранных документов
         var ids = receipts.Select(r => r.Id).ToList();
         var lines = await _context.ReceiptResources
             .Where(x => ids.Contains(x.ReceiptId))
             .ToListAsync();
 
-        // 3) Для отображения имён — один батч ресурсов/единиц
         var resIds = lines.Select(l => l.ResourceId).Distinct().ToList();
         var unitIds = lines.Select(l => l.UnitId).Distinct().ToList();
 
@@ -91,7 +83,6 @@ public class ReceiptResourceService : IReceiptResourceService
             .Where(u => unitIds.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.Name);
 
-        // 4) Сформировать DTO
         var linesByReceipt = lines.GroupBy(l => l.ReceiptId)
             .ToDictionary(g => g.Key, g => g.Select(l => new ReceiptLineDto
             {
@@ -110,8 +101,6 @@ public class ReceiptResourceService : IReceiptResourceService
             Lines = linesByReceipt.TryGetValue(r.Id, out var ls) ? ls : new List<ReceiptLineDto>()
         }).ToList();
     }
-
-    // ---------- CRUD: шапка документа ----------
 
     public async Task<ServiceResult<Receipt>> CreateReceiptAsync(Receipt receipt)
     {
@@ -155,7 +144,6 @@ public class ReceiptResourceService : IReceiptResourceService
 
         await using var tx = await _context.Database.BeginTransactionAsync();
 
-        // списать весь объём
         foreach (var l in lines)
             await _warehouse.DecreaseBalanceAsync(l.ResourceId, l.UnitId, l.Quantity);
 
@@ -165,8 +153,6 @@ public class ReceiptResourceService : IReceiptResourceService
         await tx.CommitAsync();
         return ServiceResult.Success();
     }
-
-    // ---------- CRUD: строки документа ----------
 
     public async Task<ServiceResult<ReceiptResource>> AddResourceToReceiptAsync(ReceiptResource line)
     {
@@ -187,7 +173,6 @@ public class ReceiptResourceService : IReceiptResourceService
         return ServiceResult<ReceiptResource>.Success(line);
     }
 
-    /// <summary>Полная замена строк документа простым способом: удалить и вставить заново.</summary>
     public async Task<ServiceResult> ReplaceReceiptLinesAsync(int receiptId, List<ReceiptResource> newLines)
     {
         var receipt = await _context.Receipts.FindAsync(receiptId);
@@ -195,7 +180,6 @@ public class ReceiptResourceService : IReceiptResourceService
 
         var oldLines = await _context.ReceiptResources.Where(r => r.ReceiptId == receiptId).ToListAsync();
 
-        // валидация каждая строка (архивность/кол-во; уменьшения/замены — в рамках Replace не актуальны)
         foreach (var nl in newLines)
         {
             nl.ReceiptId = receiptId;
@@ -203,7 +187,6 @@ public class ReceiptResourceService : IReceiptResourceService
             if (!vr.IsSuccess) return vr;
         }
 
-        // посчитать дельту по складу (суммарно по паре ResourceId+UnitId)
         var oldMap = oldLines.GroupBy(k => (k.ResourceId, k.UnitId))
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
         var newMap = newLines.GroupBy(k => (k.ResourceId, k.UnitId))
@@ -221,7 +204,6 @@ public class ReceiptResourceService : IReceiptResourceService
             if (delta > 0) inc.Add((key.ResourceId, key.UnitId, delta));
         }
 
-        // проверка списаний
         foreach (var d in dec)
         {
             var ok = await _warehouse.CheckAvailabilityAsync(d.res, d.unit, d.qty);

@@ -48,7 +48,6 @@ namespace WarehouseManagementAPI.Controllers
             return Ok(data);
         }
 
-        // --- значения для мультиселектов (НЕ зависят от периода) ---
         [HttpGet("filters/numbers")]
         public async Task<ActionResult<List<string>>> Numbers()
             => Ok(await _service.GetAllReceiptNumbersAsync());
@@ -66,11 +65,7 @@ namespace WarehouseManagementAPI.Controllers
         {
             var result = await _service.CreateReceiptAsync(receipt);
             if (!result.IsSuccess)
-                return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
-            //var resultWithLine = await _service.AddResourceToReceiptAsync(line);
-            //if (!result.IsSuccess)
-            //    return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });
-
+                return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Ошибка валидации" });           
             return Ok(result.Data);
         }
 

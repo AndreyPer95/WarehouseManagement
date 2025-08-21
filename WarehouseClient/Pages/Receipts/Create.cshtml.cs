@@ -4,82 +4,56 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using WarehouseClient.Models;
 using WarehouseClient.Services;
 
-namespace WarehouseClient.Pages.Receipts
+namespace WarehouseClient.Pages.Receipts;
+
+public class CreateModel : PageModel
 {
-    public class CreateModel : PageModel
+    private readonly WarehouseApiService _api;
+    public CreateModel(WarehouseApiService api) => _api = api;
+
+    [BindProperty]
+    public Receipt Receipt { get; set; } = new() { Date = DateTime.UtcNow.Date };
+
+    // строки приходят из формы как Lines[i].ResourceId / UnitId / Quantity
+    [BindProperty]
+    public List<ReceiptResource> Lines { get; set; } = new();
+
+    // списки для селектов
+    public List<SelectListItem> ResourceOptions { get; private set; } = new();
+    public List<SelectListItem> UnitOptions { get; private set; } = new();
+
+    public async Task OnGetAsync()
     {
-        private readonly WarehouseApiService _apiService;
+        var resources = await _api.GetActiveResourcesAsync();
+        var units = await _api.GetActiveUnitsAsync();
 
-        public CreateModel(WarehouseApiService apiService)
-        {
-            _apiService = apiService;
-        }
+        ResourceOptions = resources
+            .Select(r => new SelectListItem { Value = r.Id.ToString(), Text = r.Name })
+            .ToList();
 
-        [BindProperty]
-        public Receipt Receipt { get; set; } = new();
+        UnitOptions = units
+            .Select(u => new SelectListItem { Value = u.Id.ToString(), Text = u.Name })
+            .ToList();
+    }
 
-        [BindProperty]
-        public List<int> ResourceIds { get; set; } = new();
+    public async Task<IActionResult> OnPostAsync()
+    {
+        var created = await _api.CreateReceiptAsync(Receipt);
+        Receipt.Id = created.Id;
 
-        [BindProperty]
-        public List<int> UnitIds { get; set; } = new();
-
-        [BindProperty]
-        public List<decimal> Quantities { get; set; } = new();
-
-        public SelectList ResourcesList { get; set; } = new(Enumerable.Empty<SelectListItem>());
-        public SelectList UnitsList { get; set; } = new(Enumerable.Empty<SelectListItem>());
-
-        public async Task OnGetAsync()
-        {
-            var resources = await _apiService.GetActiveResourcesAsync();
-            var units = await _apiService.GetActiveUnitsAsync();
-
-            ResourcesList = new SelectList(resources, "Id", "Name");
-            UnitsList = new SelectList(units, "Id", "Name");
-        }
-
-        public async Task<IActionResult> OnPostAsync()
-        {
-            if (!ModelState.IsValid)
+        var cleanLines = (Lines ?? new())
+            .Where(l => l.ResourceId > 0 && l.UnitId > 0 && l.Quantity > 0)
+            .Select(l => new ReceiptResource
             {
-                await OnGetAsync();
-                return Page();
-            }
+                ReceiptId = Receipt.Id,
+                ResourceId = l.ResourceId,
+                UnitId = l.UnitId,
+                Quantity = l.Quantity
+            })
+            .ToList();
 
-            try
-            {
-                // Формируем список ресурсов для поступления
-                Receipt.ReceiptResources = new List<ReceiptResource>();
-                for (int i = 0; i < ResourceIds.Count; i++)
-                {
-                    if (ResourceIds[i] > 0 && UnitIds[i] > 0 && Quantities[i] > 0)
-                    {
-                        Receipt.ReceiptResources.Add(new ReceiptResource
-                        {
-                            ResourceId = ResourceIds[i],
-                            UnitId = UnitIds[i],
-                            Quantity = Quantities[i]
-                        });
-                    }
-                }
+        await _api.ReplaceReceiptLinesAsync(Receipt.Id, cleanLines);
 
-                if (!Receipt.ReceiptResources.Any())
-                {
-                    ModelState.AddModelError(string.Empty, "Добавьте хотя бы один ресурс");
-                    await OnGetAsync();
-                    return Page();
-                }
-
-                await _apiService.CreateReceiptAsync(Receipt);
-                return RedirectToPage("Index");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                await OnGetAsync();
-                return Page();
-            }
-        }
+        return RedirectToPage("Index");
     }
 }

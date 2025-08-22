@@ -6,6 +6,8 @@
 
 <h2 class="mb-3">@ViewData["Title"]</h2>
 
+<div asp-validation-summary="All" class="text-danger"></div>
+
 <form method="post">
     @Html.AntiForgeryToken()
 
@@ -49,13 +51,13 @@
                 <button type="button" class="btn btn-sm btn-danger btn-remove">x</button>
             </td>
             <td>
-                <input type="text" class="form-control" name="Lines[__index__].ResourceId" />
+                <input type="text" class="form-control" name="Lines[__index__].ResourceName" placeholder="Название ресурса" />
             </td>
             <td>
-                <input type="text" class="form-control" name="Lines[__index__].UnitId" />
+                <input type="text" class="form-control" name="Lines[__index__].UnitName" placeholder="Единица измерения" />
             </td>
             <td>
-                <input type="text" class="form-control" name="Lines[__index__].Quantity" />
+                <input type="number" class="form-control" name="Lines[__index__].Quantity" step="0.001" placeholder="Количество" />
             </td>
         </tr>
     </tbody>
@@ -72,6 +74,11 @@
                 const clone = template.cloneNode(true);
                 clone.id = '';
                 clone.innerHTML = clone.innerHTML.replaceAll('__index__', idx);
+                
+                // Отладка: проверяем, что добавляется
+                console.log('Adding row with index:', idx);
+                console.log('Row HTML:', clone.innerHTML);
+                
                 rows.appendChild(clone);
 
                 clone.querySelector('.btn-remove').addEventListener('click', function () {
@@ -83,13 +90,20 @@
             function renumber() {
                 // пересчёт имён после удаления: Lines[0].*, Lines[1].*, ...
                 [...rows.children].forEach((tr, i) => {
+                    console.log('Renumbering row', i);
                     tr.querySelectorAll('select, input').forEach(el => {
+                        const oldName = el.name;
                         el.name = el.name.replace(/Lines\[\d+\]/, `Lines[${i}]`);
+                        console.log('Changed name from', oldName, 'to', el.name);
                     });
                 });
             }
 
             document.getElementById('btnAddRow').addEventListener('click', addRow);
+            
+            // Добавляем одну строку по умолчанию при загрузке страницы
+            console.log('Page loaded, adding default row');
+            addRow();
         })();
     </script>
 }

@@ -71,7 +71,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Warehouse Management API v1");
-        c.RoutePrefix = string.Empty; // Swagger UI на корневом URL
+        c.RoutePrefix = string.Empty; 
     });
 }
 

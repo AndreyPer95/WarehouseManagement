@@ -23,8 +23,7 @@ namespace WarehouseManagementAPI.Validators.Implementations
         {
             var errors = new List<string>();
 
-            // 1) Проверка существования и статуса ресурса/единицы
-            var allowArchived = oldLine != null // уже был в документе — можно оставлять архивный
+            var allowArchived = oldLine != null 
                 && oldLine.ResourceId == newLine.ResourceId
                 && oldLine.UnitId == newLine.UnitId;
 
@@ -40,20 +39,17 @@ namespace WarehouseManagementAPI.Validators.Implementations
             else if (!allowArchived && unit.Status != UnitStatus.Active)
                 errors.Add($"Единица измерения '{unit.Name}' архивирована и недоступна для выбора");
 
-            // 2) Количество > 0
             if (newLine.Quantity <= 0)
                 errors.Add("Количество должно быть больше нуля");
 
             if (errors.Any())
                 return ServiceResult.Failure(errors);
 
-            // 3) Проверка влияния на склад при редактировании
             if (oldLine != null)
             {
-                // Случай A: пара (ResourceId,UnitId) не изменилась — проверяем уменьшение
                 if (oldLine.ResourceId == newLine.ResourceId && oldLine.UnitId == newLine.UnitId)
                 {
-                    var delta = oldLine.Quantity - newLine.Quantity; // сколько нужно "снять" со склада
+                    var delta = oldLine.Quantity - newLine.Quantity; 
                     if (delta > 0)
                     {
                         var canReduce = await _warehouseService.CheckAvailabilityAsync(
@@ -65,9 +61,6 @@ namespace WarehouseManagementAPI.Validators.Implementations
                 }
                 else
                 {
-                    // Случай B: изменили ресурс/единицу — это эквивалентно:
-                    //  - снять со склада (старую пару) полностью oldLine.Quantity
-                    //  - добавить на склад (новую пару) newLine.Quantity (добавление всегда ок)
                     var oldRes = await _context.Resources.FindAsync(oldLine.ResourceId);
                     var oldUnit = await _context.Units.FindAsync(oldLine.UnitId);
 

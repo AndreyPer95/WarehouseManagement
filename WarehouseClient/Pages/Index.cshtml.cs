@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using WarehouseClient.Models;
 using WarehouseClient.Models.Dto;
 using WarehouseClient.Services;
 
@@ -28,10 +27,8 @@ namespace WarehouseClient.Pages
 
         public async Task OnGetAsync()
         {
-            // Получаем отфильтрованные балансы с сервера
             Balances = await _apiService.GetWarehouseBalanceAsync(ResourceIds, UnitIds);
 
-            // Получаем списки для фильтров
             var resources = await _apiService.GetResourcesAsync();
             var units = await _apiService.GetUnitsAsync();
 

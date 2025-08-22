@@ -27,11 +27,9 @@ namespace WarehouseManagementAPI.Validators.Implementations
         {
             var errors = new List<string>();
 
-            // Уникальность номера
             if (!await IsReceiptNumberUniqueAsync(receipt.Number))
                 errors.Add($"Документ с номером {receipt.Number} уже существует");
 
-            // Документ может быть пустым
             foreach (var line in newLines)
             {
                 var lineResult = await _lineValidator.ValidateAsync(line, oldLine: null);
@@ -46,7 +44,6 @@ namespace WarehouseManagementAPI.Validators.Implementations
         {
             var errors = new List<string>();
 
-            // 1) Документ существует?
             var existing = await _context.Receipts.FindAsync(updatedReceipt.Id);
             if (existing is null)
             {
@@ -54,19 +51,15 @@ namespace WarehouseManagementAPI.Validators.Implementations
                 return ServiceResult.Failure(errors);
             }
 
-            // 2) Уникальность номера (исключая текущий)
             if (!await IsReceiptNumberUniqueAsync(updatedReceipt.Number, excludeId: updatedReceipt.Id))
                 errors.Add($"Документ с номером {updatedReceipt.Number} уже существует");
 
-            // 3) Подтянем старые строки БЕЗ навигаций
             var oldLines = await _context.ReceiptResources
                 .Where(rr => rr.ReceiptId == updatedReceipt.Id)
                 .ToListAsync();
 
-            // 4) Проверяем новые/изменённые строки
             foreach (var newLine in newLines)
             {
-                // если у строк есть собственный Id — ищем по нему, иначе по ключу (ResourceId, UnitId)
                 var oldLine = oldLines.FirstOrDefault(x =>
                     x.Id == newLine.Id ||
                     x.ResourceId == newLine.ResourceId && x.UnitId == newLine.UnitId);
@@ -76,14 +69,12 @@ namespace WarehouseManagementAPI.Validators.Implementations
                     errors.AddRange(lineResult.Errors);
             }
 
-            // 5) Проверяем удалённые строки (были в old, пропали в new) — нужно снять их количество со склада
             var removed = oldLines.Where(ol =>
                 !newLines.Any(nl => nl.Id == ol.Id ||
                                     nl.ResourceId == ol.ResourceId && nl.UnitId == ol.UnitId));
 
             if (removed.Any())
             {
-                // (опц.) заранее подтянем имена для сообщений, чтобы не делать N запросов
                 var resIds = removed.Select(r => r.ResourceId).Distinct().ToList();
                 var unitIds = removed.Select(r => r.UnitId).Distinct().ToList();
 
@@ -114,7 +105,6 @@ namespace WarehouseManagementAPI.Validators.Implementations
         {
             var errors = new List<string>();
 
-            // 1) Документ существует?
             var existing = await _context.Receipts.FindAsync(receiptId);
             if (existing is null)
             {
@@ -122,7 +112,6 @@ namespace WarehouseManagementAPI.Validators.Implementations
                 return ServiceResult.Failure(errors);
             }
 
-            // 2) Получаем строки отдельно
             var lines = await _context.ReceiptResources
                 .Where(rr => rr.ReceiptId == receiptId)
                 .ToListAsync();

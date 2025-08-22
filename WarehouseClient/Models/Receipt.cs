@@ -38,7 +38,6 @@ namespace WarehouseClient.Models
         [Display(Name = "Количество")]
         public decimal Quantity { get; set; }
 
-        // Навигационные свойства для отображения
         public Resource? Resource { get; set; }
         public Unit? Unit { get; set; }
     }

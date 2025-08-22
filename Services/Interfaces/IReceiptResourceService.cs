@@ -13,18 +13,15 @@ namespace WarehouseManagement.Services.Interfaces
     /// </summary>
     public interface IReceiptResourceService
     {
-        // ---------- Фильтры (значения, не зависят от периода) ----------
         /// <summary>Список всех номеров документов поступления (distinct, для мультиселекта).</summary>
         Task<List<string>> GetAllReceiptNumbersAsync();
 
-        // ---------- Чтение / фильтрация ----------
         /// <summary>
         /// Получить список поступлений c наполнением (строками) по серверным фильтрам.
         /// Период (From/To), номера документов (multi), ресурсы (multi), единицы (multi).
         /// </summary>
         Task<List<ReceiptWithLinesDto>> GetReceiptsAsync(ReceiptFilter filter);
 
-        // ---------- CRUD: шапка документа ----------
         /// <summary>Создать документ (пустой допускается). Проверяется уникальность номера.</summary>
         Task<ServiceResult<Receipt>> CreateReceiptAsync(Receipt receipt);
 
@@ -34,7 +31,6 @@ namespace WarehouseManagement.Services.Interfaces
         /// <summary>Удалить документ. Перед удалением проверяется возможность списания всех строк со склада.</summary>
         Task<ServiceResult> DeleteReceiptAsync(int id);
 
-        // ---------- CRUD: строки документа ----------
         /// <summary>Добавить строку в документ. При успехе пополняет баланс склада.</summary>
         Task<ServiceResult<ReceiptResource>> AddResourceToReceiptAsync(ReceiptResource line);
 

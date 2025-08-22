@@ -56,7 +56,6 @@ namespace WarehouseManagementAPI.Validators.Implementations
                 return ServiceResult.Failure(errors);
             }
 
-            // Нельзя удалить, если где-то используется (в поступлениях/отгрузках и т.п.)
             var usedInReceipts = await _context.ReceiptResources.AnyAsync(r => r.ResourceId == resourceId);
             if (usedInReceipts)
                 errors.Add("Ресурс используется и не может быть удалён. Переведите его в архив.");

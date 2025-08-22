@@ -9,16 +9,16 @@ namespace WarehouseManagement.Models.Receipts
     {
         [Key]
         public int Id { get; set; }
-        
+
         [Required]
         public int ReceiptId { get; set; }
-        
+
         [Required]
         public int ResourceId { get; set; }
-        
+
         [Required]
         public int UnitId { get; set; }
-        
+
         [Required(ErrorMessage = "Количество обязательно")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Количество должно быть больше 0")]
         public decimal Quantity { get; set; }

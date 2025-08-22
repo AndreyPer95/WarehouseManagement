@@ -60,7 +60,6 @@ public class ResourceService : IResourceService
         return ServiceResult.Success();
     }
 
-    // Для фильтров (не зависят от периода)
     public async Task<List<OptionDto>> GetFilterOptionsAsync()
         => await _context.Resources
             .OrderBy(r => r.Name)

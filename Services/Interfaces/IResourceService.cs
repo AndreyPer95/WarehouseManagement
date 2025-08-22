@@ -12,8 +12,6 @@ namespace WarehouseManagementAPI.Services.Interfaces
         Task<ServiceResult<Resource>> CreateAsync(Resource resource);
         Task<ServiceResult<Resource>> UpdateAsync(Resource resource);
         Task<ServiceResult> DeleteAsync(int id);
-
-        // Для фильтров (не зависят от периода)
         Task<List<OptionDto>> GetFilterOptionsAsync();
     }
 }

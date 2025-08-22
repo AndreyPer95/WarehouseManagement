@@ -8,7 +8,6 @@ builder.Services.AddRazorPages();
 // Configure HttpClient for API
 builder.Services.AddHttpClient<WarehouseApiService>(client =>
 {
-    // Получаем базовый URL из конфигурации
     var apiUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7000/";
     client.BaseAddress = new Uri(apiUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -26,7 +25,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseAuthorization();
 app.MapRazorPages();
 
 app.Run();

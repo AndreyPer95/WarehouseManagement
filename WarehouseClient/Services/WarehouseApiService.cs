@@ -141,7 +141,7 @@ namespace WarehouseClient.Services
             var response = await _httpClient.PostAsync($"api/units/{id}/archive", null);
             return response.IsSuccessStatusCode;
         }
-        
+
         // Receipts
         public async Task<List<Receipt>> GetReceiptsAsync()
         {
@@ -152,45 +152,45 @@ namespace WarehouseClient.Services
         }
 
         public async Task<List<Receipt>> GetFilteredReceiptsAsync(
-            DateTime? dateFrom, 
-            DateTime? dateTo, 
-            List<string>? numbers, 
-            List<int>? resourceIds, 
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            List<string>? numbers,
+            List<int>? resourceIds,
             List<int>? unitIds)
         {
             var queryParams = new List<string>();
-            
+
             if (dateFrom.HasValue)
                 queryParams.Add($"from={dateFrom.Value:yyyy-MM-dd}");
-            
+
             if (dateTo.HasValue)
                 queryParams.Add($"to={dateTo.Value:yyyy-MM-dd}");
-            
+
             if (numbers != null && numbers.Any())
             {
                 foreach (var number in numbers)
                     queryParams.Add($"numbers={Uri.EscapeDataString(number)}");
             }
-            
+
             if (resourceIds != null && resourceIds.Any())
             {
                 foreach (var id in resourceIds)
                     queryParams.Add($"resourceIds={id}");
             }
-            
+
             if (unitIds != null && unitIds.Any())
             {
                 foreach (var id in unitIds)
                     queryParams.Add($"unitIds={id}");
             }
-            
+
             var queryString = queryParams.Any() ? "?" + string.Join("&", queryParams) : "";
             var response = await _httpClient.GetAsync($"api/receipts{queryString}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            
+
             var receiptsDto = JsonSerializer.Deserialize<List<ReceiptWithLinesDto>>(json, _jsonOptions) ?? new List<ReceiptWithLinesDto>();
-            
+
             var receipts = new List<Receipt>();
             foreach (var dto in receiptsDto)
             {
@@ -210,7 +210,7 @@ namespace WarehouseClient.Services
                 };
                 receipts.Add(receipt);
             }
-            
+
             return receipts;
         }
 
@@ -288,19 +288,19 @@ namespace WarehouseClient.Services
         public async Task<List<WarehouseBalanceRowDto>> GetWarehouseBalanceAsync(List<int>? resourceIds = null, List<int>? unitIds = null)
         {
             var queryParams = new List<string>();
-            
+
             if (resourceIds != null && resourceIds.Any())
             {
                 foreach (var id in resourceIds)
                     queryParams.Add($"resourceIds={id}");
             }
-            
+
             if (unitIds != null && unitIds.Any())
             {
                 foreach (var id in unitIds)
                     queryParams.Add($"unitIds={id}");
             }
-            
+
             var queryString = queryParams.Any() ? "?" + string.Join("&", queryParams) : "";
             var response = await _httpClient.GetAsync($"api/warehouse/balance{queryString}");
             response.EnsureSuccessStatusCode();

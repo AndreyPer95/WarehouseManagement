@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using WarehouseClient.Models;
 using WarehouseClient.Services;
 
@@ -14,45 +13,116 @@ public class CreateModel : PageModel
     [BindProperty]
     public Receipt Receipt { get; set; } = new() { Date = DateTime.UtcNow.Date };
 
-    // строки приходят из формы как Lines[i].ResourceId / UnitId / Quantity
     [BindProperty]
-    public List<ReceiptResource> Lines { get; set; } = new();
-
-    // списки для селектов
-    public List<SelectListItem> ResourceOptions { get; private set; } = new();
-    public List<SelectListItem> UnitOptions { get; private set; } = new();
-
+    public List<ReceiptLine> Lines { get; set; } = new();
+    
     public async Task OnGetAsync()
     {
-        var resources = await _api.GetActiveResourcesAsync();
-        var units = await _api.GetActiveUnitsAsync();
-
-        ResourceOptions = resources
-            .Select(r => new SelectListItem { Value = r.Id.ToString(), Text = r.Name })
-            .ToList();
-
-        UnitOptions = units
-            .Select(u => new SelectListItem { Value = u.Id.ToString(), Text = u.Name })
-            .ToList();
+        await Task.CompletedTask;
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
+        Console.WriteLine($"=== Form Data Debug ===");
+        
+        foreach (var key in Request.Form.Keys)
+        {
+            Console.WriteLine($"Form[{key}] = {Request.Form[key]}");
+        }
+        
+        Console.WriteLine($"Receipt.Number: {Receipt.Number}");
+        Console.WriteLine($"Receipt.Date: {Receipt.Date}");
+        Console.WriteLine($"Lines is null: {Lines == null}");
+        Console.WriteLine($"Lines count: {Lines?.Count ?? 0}");
+        
+        if (Lines != null)
+        {
+            for (int i = 0; i < Lines.Count; i++)
+            {
+                var line = Lines[i];
+                Console.WriteLine($"Lines[{i}]: ResourceName='{line.ResourceName}', UnitName='{line.UnitName}', Quantity={line.Quantity}");
+            }
+        }
+
         var created = await _api.CreateReceiptAsync(Receipt);
         Receipt.Id = created.Id;
+        Console.WriteLine($"Created Receipt with Id: {Receipt.Id}");
 
-        var cleanLines = (Lines ?? new())
-            .Where(l => l.ResourceId > 0 && l.UnitId > 0 && l.Quantity > 0)
-            .Select(l => new ReceiptResource
-            {
-                ReceiptId = Receipt.Id,
-                ResourceId = l.ResourceId,
-                UnitId = l.UnitId,
-                Quantity = l.Quantity
-            })
+        var validLines = (Lines ?? new())
+            .Where(l => !string.IsNullOrWhiteSpace(l.ResourceName) 
+                     && !string.IsNullOrWhiteSpace(l.UnitName) 
+                     && l.Quantity > 0)
             .ToList();
 
-        await _api.ReplaceReceiptLinesAsync(Receipt.Id, cleanLines);
+        Console.WriteLine($"Valid lines count: {validLines.Count}");
+        foreach (var line in validLines)
+        {
+            Console.WriteLine($"Line: Resource='{line.ResourceName}', Unit='{line.UnitName}', Qty={line.Quantity}");
+        }
+
+        if (validLines.Any())
+        {
+            var allResources = await _api.GetResourcesAsync();
+            var allUnits = await _api.GetUnitsAsync();
+
+            var receiptResources = new List<ReceiptResource>();
+
+            foreach (var line in validLines)
+            {
+                var resource = allResources.FirstOrDefault(r => r.Name.Equals(line.ResourceName, StringComparison.OrdinalIgnoreCase));
+                if (resource == null)
+                {
+                    resource = await _api.CreateResourceAsync(new Resource 
+                    { 
+                        Name = line.ResourceName,
+                        Status = EntityState.Active
+                    });
+
+                    if (resource == null || resource.Id == 0)
+                    {
+                        ModelState.AddModelError("", $"Не удалось создать ресурс '{line.ResourceName}'");
+                        return Page();
+                    }
+                }
+
+                var unit = allUnits.FirstOrDefault(u => u.Name.Equals(line.UnitName, StringComparison.OrdinalIgnoreCase));
+                if (unit == null)
+                {
+                    unit = await _api.CreateUnitAsync(new Unit 
+                    { 
+                        Name = line.UnitName,
+                        Status = EntityState.Active
+                    });
+                    
+                    if (unit == null || unit.Id == 0)
+                    {
+                        ModelState.AddModelError("", $"Не удалось создать единицу измерения '{line.UnitName}'");
+                        return Page();
+                    }
+                }
+
+                receiptResources.Add(new ReceiptResource
+                {
+                    ReceiptId = Receipt.Id,
+                    ResourceId = resource.Id,
+                    UnitId = unit.Id,
+                    Quantity = line.Quantity
+                });
+                
+                Console.WriteLine($"Added line: ReceiptId={Receipt.Id}, ResourceId={resource.Id}, UnitId={unit.Id}, Quantity={line.Quantity}");
+            }
+
+            var success = await _api.ReplaceReceiptLinesAsync(Receipt.Id, receiptResources);
+            
+            if (!success)
+            {
+                await _api.DeleteReceiptAsync(Receipt.Id);
+                
+                ModelState.AddModelError("", "Не удалось добавить строки в документ. Проверьте правильность данных.");
+                
+                return Page();
+            }
+        }
 
         return RedirectToPage("Index");
     }

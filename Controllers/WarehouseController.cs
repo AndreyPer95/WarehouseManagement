@@ -25,7 +25,6 @@ namespace WarehouseManagementAPI.Controllers
             _units = units;
         }
 
-        // баланс склада с серверной фильтрацией (мультиселекты)
         [HttpGet("balance")]
         public async Task<ActionResult<List<WarehouseBalanceRowDto>>> GetBalance(
             [FromQuery] List<int>? resourceIds,
@@ -35,7 +34,6 @@ namespace WarehouseManagementAPI.Controllers
             return Ok(data);
         }
 
-        // значения для мультиселектов (НЕ зависят от периода)
         [HttpGet("filters/resources")]
         public async Task<ActionResult<List<OptionDto>>> Resources()
             => Ok(await _resources.GetFilterOptionsAsync());

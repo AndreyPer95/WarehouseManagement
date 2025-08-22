@@ -105,10 +105,13 @@ namespace WarehouseManagementAPI.Controllers
         [HttpPut("lines/replace/{receiptId:int}")]
         public async Task<IActionResult> ReplaceLines(int receiptId, [FromBody] List<ReceiptResource> lines)
         {
-            var result = await _service.ReplaceReceiptLinesAsync(receiptId, lines);
+            var result = await _service.ReplaceReceiptLinesAsync(receiptId, lines);    
             if (!result.IsSuccess)
-                return BadRequest(result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Сохранить изменения не удалось" });
-
+            {
+                var errors = result.Errors.ToArray() ?? new[] { result.ErrorMessage ?? "Сохранить изменения не удалось" };
+                return BadRequest(errors);
+            }
+            
             return NoContent();
         }
 

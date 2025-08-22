@@ -61,7 +61,6 @@ public class UnitService:IUnitService
         return ServiceResult.Success();
     }
 
-    // Для фильтров (не зависят от периода)
     public async Task<List<OptionDto>> GetFilterOptionsAsync()
         => await _context.Units
             .OrderBy(u => u.Name)

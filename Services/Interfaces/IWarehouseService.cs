@@ -8,8 +8,6 @@ namespace WarehouseManagement.Services.Interfaces
         Task<bool> CheckAvailabilityAsync(int resourceId, int unitId, decimal qty);
         Task IncreaseBalanceAsync(int resourceId, int unitId, decimal qty);
         Task DecreaseBalanceAsync(int resourceId, int unitId, decimal qty);
-
-        // Страница "Склад": фильтрация по мультиселектам
         Task<List<WarehouseBalanceRowDto>> GetBalanceAsync(List<int>? resourceIds, List<int>? unitIds);
     }
 }
